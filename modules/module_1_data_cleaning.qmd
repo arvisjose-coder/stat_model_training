@@ -1,0 +1,152 @@
+---
+title: "Module 1 — Data Cleaning and Exploration"
+---
+
+# Vue d’ensemble du module
+
+Le Module 1 sert à apprendre à connaître les données avant de choisir un modèle statistique.
+
+L’idée centrale est simple :
+
+> On ne commence pas par choisir un modèle.\
+> On commence par comprendre les données.
+
+# Objectifs à maîtriser
+
+À la fin de ce module, je dois être capable de :
+
+- importer un jeu de données dans R ;
+- inspecter sa structure ;
+- reconnaître les types de variables ;
+- nettoyer les noms de colonnes ;
+- détecter les doublons ;
+- repérer les valeurs manquantes ;
+- transformer les variables au bon format ;
+- réaliser une analyse exploratoire ;
+- préparer les données pour les modules suivants.
+
+# Packages R
+
+```{r}
+#| label: install-multiple
+#| include: false
+
+# Liste des packages à installer
+pkgs <- c("here", "tidyverse")
+
+# Installation uniquement si absent, en mode silencieux
+new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
+if(length(new_pkgs)) {
+  install.packages(new_pkgs, quiet = TRUE, verbose = FALSE)
+}
+library(tidyverse)
+library(here)
+```
+
+# Vérifier le dossier du projet
+
+```{r}
+here()
+```
+
+La fonction `here()` permet de construire des chemins de fichiers robustes à partir de la racine du projet.
+
+# Importation des données
+
+Pour ce module, on utilisera d’abord le fichier `df_traits.csv`, qui représente une version nettoyée des traits biologiques utilisée dans les modules suivants.
+
+```{r}
+df_traits <- read.csv(here("Data", "df_traits.csv"))
+```
+
+# Première inspection du tableau
+
+```{r}
+class(df_traits)
+dim(df_traits)
+names(df_traits)
+head(df_traits)
+```
+
+# Interprétation
+
+- `class()` indique le type d’objet R.
+- `dim()` donne le nombre de lignes et de colonnes.
+- `names()` affiche les noms de variables.
+- `head()` montre les premières lignes du tableau.
+
+# Structure des variables
+
+```{r}
+str(df_traits)
+```
+
+Cette commande est essentielle pour identifier :
+
+- les variables numériques ;
+- les variables catégorielles ;
+- les variables mal codées ;
+- les variables qui devront être transformées.
+
+# Mini-exercice 1
+
+Répondre aux questions suivantes :
+
+1.  Combien y a-t-il d’observations ?
+2.  Combien y a-t-il de variables ?
+3.  Quelles variables semblent numériques ?
+4.  Quelles variables semblent catégorielles ?
+5.  Est-ce que certaines variables semblent avoir des valeurs manquantes ?
+
+# Vérification des valeurs manquantes
+
+```{r}
+colSums(is.na(df_traits))
+```
+
+# Pourcentage de valeurs manquantes
+
+```{r}
+missing_summary <- df_traits %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "n_missing"
+  ) %>%
+  mutate(
+    pct_missing = 100 * n_missing / nrow(df_traits)
+  ) %>%
+  arrange(desc(pct_missing))
+
+missing_summary
+```
+
+# Visualisation des valeurs manquantes
+
+```{r}
+ggplot(missing_summary, aes(x = reorder(variable, pct_missing), y = pct_missing)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Pourcentage de valeurs manquantes par variable",
+    x = "Variable",
+    y = "% de valeurs manquantes"
+  ) +
+  theme_minimal()
+```
+
+# Mini-fiche de révision
+
+| Fonction     | Rôle                                       |
+|--------------|--------------------------------------------|
+| `read.csv()` | Importer un fichier CSV                    |
+| `here()`     | Construire un chemin de fichier propre     |
+| `class()`    | Voir le type d’objet                       |
+| `dim()`      | Voir lignes et colonnes                    |
+| `names()`    | Voir les noms de variables                 |
+| `head()`     | Voir les premières lignes                  |
+| `str()`      | Voir la structure des variables            |
+| `is.na()`    | Détecter les valeurs manquantes            |
+| `colSums()`  | Compter les valeurs manquantes par colonne |
+| `ggplot()`   | Visualiser les données                     |

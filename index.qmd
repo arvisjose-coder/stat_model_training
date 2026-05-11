@@ -1,11 +1,50 @@
 ---
-title: "stat_model_training"
+title: "Accueil"
 ---
 
-This is a Quarto website.
+# What Statistical Model Should I Use?
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+Bienvenue dans mon site personnel de révision pour la formation **What Statistical Model Should I Use?**
 
-```{r}
-1 + 1
-```
+Ce site me servira à documenter toute la formation :
+
+- nettoyage et exploration des données ;
+- gestion des valeurs manquantes ;
+- régression linéaire et modèles linéaires généralisés ;
+- classification et clustering ;
+- analyse complète de données réelles ;
+- introduction à l’inférence causale.
+
+## Objectif général
+
+L’objectif est d’apprendre à choisir un modèle statistique selon :
+
+1.  la question de recherche ;
+2.  le type de variable réponse ;
+3.  le type de prédicteurs ;
+4.  la structure du jeu de données ;
+5.  la présence de valeurs manquantes ;
+6.  l’objectif : association, prédiction ou causalité.
+
+## Modules de la formation
+
+| Module   | Thème                         |
+|----------|-------------------------------|
+| Module 1 | Data cleaning and exploration |
+| Module 2 | Dealing with missingness      |
+| Module 3 | Regression and GLM            |
+| Module 4 | Classification and clustering |
+| Module 5 | Putting it all together       |
+| Module 6 | Causal inference              |
+
+## Arbre de décision mental
+
+Avant de choisir un modèle, je dois toujours me demander :
+
+| Question | Pourquoi c’est important |
+|------------------------------------|------------------------------------|
+| Quelle est ma variable réponse ? | Elle guide le type de modèle |
+| Est-elle continue, binaire, un comptage ou une proportion ? | Chaque type a une famille de modèles différente |
+| Les observations sont-elles indépendantes ? | Sinon, il faut penser aux modèles mixtes ou corrélés |
+| Y a-t-il des valeurs manquantes ? | Elles peuvent biaiser l’analyse |
+| Est-ce une question de prédiction, d’association ou de causalité ? | Le modèle et l’interprétation changent |
