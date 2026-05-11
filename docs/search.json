@@ -39,6 +39,258 @@
     "href": "modules/module_1_data_cleaning.html",
     "title": "Module 1 — Data Cleaning and Exploration",
     "section": "",
-    "text": "1 Vue d’ensemble du module\nLe Module 1 sert à apprendre à connaître les données avant de choisir un modèle statistique.\nL’idée centrale est simple :\n\nOn ne commence pas par choisir un modèle.\nOn commence par comprendre les données.\n\n\n\n2 Objectifs à maîtriser\nÀ la fin de ce module, je dois être capable de :\n\nimporter un jeu de données dans R ;\ninspecter sa structure ;\nreconnaître les types de variables ;\nnettoyer les noms de colonnes ;\ndétecter les doublons ;\nrepérer les valeurs manquantes ;\ntransformer les variables au bon format ;\nréaliser une analyse exploratoire ;\npréparer les données pour les modules suivants.\n\n\n\n3 Packages R\n\n\n4 Vérifier le dossier du projet\n\n\nCode\nhere()\n\n\n[1] \"C:/Users/Drarv/Downloads/stat_model_training\"\n\n\nLa fonction here() permet de construire des chemins de fichiers robustes à partir de la racine du projet.\n\n\n5 Importation des données\nPour ce module, on utilisera d’abord le fichier df_traits.csv, qui représente une version nettoyée des traits biologiques utilisée dans les modules suivants.\n\n\nCode\ndf_traits &lt;- read.csv(here(\"Data\", \"df_traits.csv\"))\n\n\n\n\n6 Première inspection du tableau\n\n\nCode\nclass(df_traits)\n\n\n[1] \"data.frame\"\n\n\nCode\ndim(df_traits)\n\n\n[1] 6612   14\n\n\nCode\nnames(df_traits)\n\n\n [1] \"family\"                  \"genus\"                  \n [3] \"species\"                 \"latitude\"               \n [5] \"insular_endemic\"         \"maximum_svl\"            \n [7] \"hatchling_neonate_svl\"   \"activity_time\"          \n [9] \"diet\"                    \"foraging_mode\"          \n[11] \"reproductive_mode\"       \"largest_clutch\"         \n[13] \"age_first_breeding\"      \"iucn_redlist_assessment\"\n\n\nCode\nhead(df_traits)\n\n\n     family      genus               species latitude insular_endemic\n1 Scincidae Ablepharus Ablepharus bivittatus    34.16              no\n2 Scincidae Ablepharus     Ablepharus budaki    36.44              no\n3 Scincidae Ablepharus   Ablepharus chernovi    38.32              no\n4 Scincidae Ablepharus    Ablepharus darvazi    38.96              no\n5 Scincidae Ablepharus    Ablepharus deserti    41.38              no\n6 Scincidae Ablepharus   Ablepharus grayanus    27.09              no\n  maximum_svl hatchling_neonate_svl activity_time        diet foraging_mode\n1        61.0                  18.5       Diurnal Carnivorous          &lt;NA&gt;\n2        48.0                    NA       Diurnal Carnivorous          &lt;NA&gt;\n3        54.0                    NA       Diurnal Carnivorous          &lt;NA&gt;\n4        44.0                    NA       Diurnal        &lt;NA&gt;          &lt;NA&gt;\n5        58.8                  17.5       Diurnal Carnivorous          &lt;NA&gt;\n6        34.9                  14.5       Diurnal Carnivorous          &lt;NA&gt;\n  reproductive_mode largest_clutch age_first_breeding iucn_redlist_assessment\n1         Oviparous              5                 NA                      LC\n2         Oviparous              5                 NA                      LC\n3         Oviparous              4                 NA                      LC\n4              &lt;NA&gt;             NA                 NA                      DD\n5         Oviparous              8                 10                      LC\n6         Oviparous              2                 NA                      NE\n\n\n\n\n7 Interprétation\n\nclass() indique le type d’objet R.\ndim() donne le nombre de lignes et de colonnes.\nnames() affiche les noms de variables.\nhead() montre les premières lignes du tableau.\n\n\n\n8 Structure des variables\n\n\nCode\nstr(df_traits)\n\n\n'data.frame':   6612 obs. of  14 variables:\n $ family                 : chr  \"Scincidae\" \"Scincidae\" \"Scincidae\" \"Scincidae\" ...\n $ genus                  : chr  \"Ablepharus\" \"Ablepharus\" \"Ablepharus\" \"Ablepharus\" ...\n $ species                : chr  \"Ablepharus bivittatus\" \"Ablepharus budaki\" \"Ablepharus chernovi\" \"Ablepharus darvazi\" ...\n $ latitude               : num  34.2 36.4 38.3 39 41.4 ...\n $ insular_endemic        : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ maximum_svl            : num  61 48 54 44 58.8 34.9 58 50 55 52 ...\n $ hatchling_neonate_svl  : num  18.5 NA NA NA 17.5 14.5 20 NA 20 18.5 ...\n $ activity_time          : chr  \"Diurnal\" \"Diurnal\" \"Diurnal\" \"Diurnal\" ...\n $ diet                   : chr  \"Carnivorous\" \"Carnivorous\" \"Carnivorous\" NA ...\n $ foraging_mode          : chr  NA NA NA NA ...\n $ reproductive_mode      : chr  \"Oviparous\" \"Oviparous\" \"Oviparous\" NA ...\n $ largest_clutch         : int  5 5 4 NA 8 2 6 5 6 6 ...\n $ age_first_breeding     : num  NA NA NA NA 10 NA 6 NA 10 NA ...\n $ iucn_redlist_assessment: chr  \"LC\" \"LC\" \"LC\" \"DD\" ...\n\n\nCette commande est essentielle pour identifier :\n\nles variables numériques ;\nles variables catégorielles ;\nles variables mal codées ;\nles variables qui devront être transformées.\n\n\n\n9 Mini-exercice 1\nRépondre aux questions suivantes :\n\nCombien y a-t-il d’observations ?\nCombien y a-t-il de variables ?\nQuelles variables semblent numériques ?\nQuelles variables semblent catégorielles ?\nEst-ce que certaines variables semblent avoir des valeurs manquantes ?\n\n\n\n10 Vérification des valeurs manquantes\n\n\nCode\ncolSums(is.na(df_traits))\n\n\n                 family                   genus                 species \n                      0                       0                       0 \n               latitude         insular_endemic             maximum_svl \n                     25                       0                      24 \n  hatchling_neonate_svl           activity_time                    diet \n                   4540                    1532                    3265 \n          foraging_mode       reproductive_mode          largest_clutch \n                   5544                    2570                    3030 \n     age_first_breeding iucn_redlist_assessment \n                   5913                       0 \n\n\n\n\n11 Pourcentage de valeurs manquantes\n\n\nCode\nmissing_summary &lt;- df_traits %&gt;%\n  summarise(across(everything(), ~ sum(is.na(.)))) %&gt;%\n  pivot_longer(\n    cols = everything(),\n    names_to = \"variable\",\n    values_to = \"n_missing\"\n  ) %&gt;%\n  mutate(\n    pct_missing = 100 * n_missing / nrow(df_traits)\n  ) %&gt;%\n  arrange(desc(pct_missing))\n\nmissing_summary\n\n\n# A tibble: 14 × 3\n   variable                n_missing pct_missing\n   &lt;chr&gt;                       &lt;int&gt;       &lt;dbl&gt;\n 1 age_first_breeding           5913      89.4  \n 2 foraging_mode                5544      83.8  \n 3 hatchling_neonate_svl        4540      68.7  \n 4 diet                         3265      49.4  \n 5 largest_clutch               3030      45.8  \n 6 reproductive_mode            2570      38.9  \n 7 activity_time                1532      23.2  \n 8 latitude                       25       0.378\n 9 maximum_svl                    24       0.363\n10 family                          0       0    \n11 genus                           0       0    \n12 species                         0       0    \n13 insular_endemic                 0       0    \n14 iucn_redlist_assessment         0       0    \n\n\n\n\n12 Visualisation des valeurs manquantes\n\n\nCode\nggplot(missing_summary, aes(x = reorder(variable, pct_missing), y = pct_missing)) +\n  geom_col() +\n  coord_flip() +\n  labs(\n    title = \"Pourcentage de valeurs manquantes par variable\",\n    x = \"Variable\",\n    y = \"% de valeurs manquantes\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\n13 Mini-fiche de révision\n\n\n\nFonction\nRôle\n\n\n\n\nread.csv()\nImporter un fichier CSV\n\n\nhere()\nConstruire un chemin de fichier propre\n\n\nclass()\nVoir le type d’objet\n\n\ndim()\nVoir lignes et colonnes\n\n\nnames()\nVoir les noms de variables\n\n\nhead()\nVoir les premières lignes\n\n\nstr()\nVoir la structure des variables\n\n\nis.na()\nDétecter les valeurs manquantes\n\n\ncolSums()\nCompter les valeurs manquantes par colonne\n\n\nggplot()\nVisualiser les données"
+    "text": "Le but de ce module est d’apprendre à connaître les données avant de choisir un modèle statistique.\nL’idée centrale est :\n\nOn ne commence pas une analyse en choisissant directement un modèle.\nOn commence par comprendre la question, la structure du tableau, les types de variables, les valeurs manquantes, les distributions, les outliers et les relations entre variables.\n\nDans ce module, nous travaillons avec le fichier df_traits.csv, un jeu de données de traits biologiques de reptiles/lézards. Chaque ligne représente une espèce, et chaque colonne représente une information taxonomique, morphologique, écologique, reproductive ou de conservation."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#données-tidy",
+    "href": "modules/module_1_data_cleaning.html#données-tidy",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "4.1 Données tidy",
+    "text": "4.1 Données tidy\nUn tableau est considéré comme tidy lorsque :\n\n\n\nPrincipe\nExemple\n\n\n\n\nUne ligne = une observation\nune espèce\n\n\nUne colonne = une variable\ntaille, régime alimentaire, statut IUCN\n\n\nUne cellule = une valeur\n61 mm, carnivore, LC\n\n\n\nDans notre cas, si chaque ligne correspond à une espèce et chaque colonne à un trait, le tableau est déjà proche d’un format tidy."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#data-cleaning",
+    "href": "modules/module_1_data_cleaning.html#data-cleaning",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "4.2 Data cleaning",
+    "text": "4.2 Data cleaning\nLe data cleaning consiste à préparer les données pour l’analyse.\nCela inclut :\n\ncorriger les noms de colonnes ;\nretirer les colonnes inutiles ;\ncorriger les mauvais formats ;\nconvertir les variables catégorielles en facteurs ;\nrepérer les doublons ;\ncompter les valeurs manquantes ;\ndécider quelles variables garder ou exclure."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#analyse-exploratoire-des-données",
+    "href": "modules/module_1_data_cleaning.html#analyse-exploratoire-des-données",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "4.3 Analyse exploratoire des données",
+    "text": "4.3 Analyse exploratoire des données\nL’EDA, ou exploratory data analysis, sert à comprendre les données avant la modélisation.\nElle permet de voir :\n\nla distribution des variables ;\nles valeurs extrêmes ;\nles catégories dominantes ;\nles relations possibles entre variables ;\nles variables trop incomplètes ;\nles premières hypothèses biologiques."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#explication",
+    "href": "modules/module_1_data_cleaning.html#explication",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "5.1 Explication",
+    "text": "5.1 Explication\n\ntidyverse regroupe plusieurs packages utiles : dplyr, ggplot2, tidyr, readr, forcats, etc.\nhere permet de construire des chemins de fichiers à partir de la racine du projet Quarto."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation",
+    "href": "modules/module_1_data_cleaning.html#interprétation",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "6.1 Interprétation",
+    "text": "6.1 Interprétation\nLa fonction here() doit retourner le dossier principal du projet, par exemple :\nC:/Users/Drarv/Downloads/stat_model_training\nSi ce chemin est correct, les chemins vers les fichiers seront plus faciles à gérer."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#explication-du-code",
+    "href": "modules/module_1_data_cleaning.html#explication-du-code",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "7.1 Explication du code",
+    "text": "7.1 Explication du code\nread.csv(...)\nImporte le fichier CSV dans R.\nstringsAsFactors = FALSE\nEmpêche R de transformer automatiquement les textes en facteurs. On veut contrôler nous-mêmes cette étape.\nna.strings = c(\"\", \"NA\", \"N/A\", \"na\", \"NaN\")\nIndique à R quelles valeurs doivent être considérées comme manquantes.\nselect(-any_of(c(\"index\", \"X\")))\nRetire une colonne d’index automatique si elle existe."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-1",
+    "href": "modules/module_1_data_cleaning.html#interprétation-1",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "8.1 Interprétation",
+    "text": "8.1 Interprétation\n\nclass(df_traits) indique le type d’objet R.\ndim(df_traits) donne le nombre de lignes et de colonnes.\nnames(df_traits) affiche les noms de variables.\nhead(df_traits) montre les premières lignes du tableau.\n\nDans nos premières sorties, le tableau contenait 6612 observations et 14 variables."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#pourquoi-utiliser-glimpse",
+    "href": "modules/module_1_data_cleaning.html#pourquoi-utiliser-glimpse",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "9.1 Pourquoi utiliser glimpse() ?",
+    "text": "9.1 Pourquoi utiliser glimpse() ?\nglimpse() donne une vue compacte du tableau :\n\nnom de chaque variable ;\ntype de variable ;\npremières valeurs ;\naperçu général du jeu de données.\n\nC’est une commande très utile au début de toute analyse."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-2",
+    "href": "modules/module_1_data_cleaning.html#interprétation-2",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "10.1 Interprétation",
+    "text": "10.1 Interprétation\nLes colonnes taxonomiques servent surtout à identifier les espèces.\nLes traits peuvent servir comme :\n\nvariables réponses ;\nprédicteurs ;\nvariables de regroupement ;\nvariables à explorer."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-3",
+    "href": "modules/module_1_data_cleaning.html#interprétation-3",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "11.1 Interprétation",
+    "text": "11.1 Interprétation\nSi nrow(duplicated_species) vaut 0, il n’y a pas de doublons d’espèces.\nSi le résultat est supérieur à 0, il faut inspecter les lignes. Les doublons peuvent fausser les analyses, surtout si l’unité d’observation est l’espèce."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#explication-du-code-1",
+    "href": "modules/module_1_data_cleaning.html#explication-du-code-1",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "12.1 Explication du code",
+    "text": "12.1 Explication du code\nsummarise(across(everything(), ~ sum(is.na(.))))\nCalcule le nombre de valeurs manquantes pour chaque colonne.\npivot_longer(...)\nTransforme le tableau large en tableau long. C’est plus pratique pour visualiser.\nmutate(pct_missing = ...)\nAjoute le pourcentage de valeurs manquantes.\narrange(desc(pct_missing))\nClasse les variables de la plus incomplète à la plus complète."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-4",
+    "href": "modules/module_1_data_cleaning.html#interprétation-4",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "13.1 Interprétation",
+    "text": "13.1 Interprétation\nLes variables avec beaucoup de valeurs manquantes doivent être traitées avec prudence.\nPar exemple :\n\nune variable avec 0 à 5 % de valeurs manquantes est souvent utilisable ;\nune variable avec 20 à 40 % de valeurs manquantes demande une stratégie ;\nune variable avec plus de 60 % de valeurs manquantes est très problématique ;\nune variable avec plus de 80 % de valeurs manquantes ne devrait généralement pas être utilisée directement dans un modèle sans justification forte."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-biologique",
+    "href": "modules/module_1_data_cleaning.html#interprétation-biologique",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "14.1 Interprétation biologique",
+    "text": "14.1 Interprétation biologique\nUne variable très incomplète n’est pas forcément inutile. Elle peut être biologiquement importante, mais elle nécessitera une réflexion :\n\nexclusion ;\nimputation ;\nanalyse de sensibilité ;\nmodèle adapté ;\nremplacement par une variable plus complète.\n\nCette réflexion sera approfondie au Module 2."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-5",
+    "href": "modules/module_1_data_cleaning.html#interprétation-5",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "15.1 Interprétation",
+    "text": "15.1 Interprétation\nLes variables numériques peuvent représenter :\n\ndes variables continues : latitude, taille ;\ndes comptages : taille de ponte ;\ndes âges ;\ndes mesures biologiques.\n\nLes variables catégorielles peuvent représenter :\n\ndes familles taxonomiques ;\ndes régimes alimentaires ;\ndes modes reproductifs ;\ndes statuts de conservation."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#pourquoi-convertir-en-facteur",
+    "href": "modules/module_1_data_cleaning.html#pourquoi-convertir-en-facteur",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "16.1 Pourquoi convertir en facteur ?",
+    "text": "16.1 Pourquoi convertir en facteur ?\nUn texte comme \"Carnivorous\" est seulement une chaîne de caractères.\nUn facteur indique à R :\n\nCette variable représente des catégories.\n\nC’est important pour les modèles statistiques, car R créera automatiquement des comparaisons entre catégories."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-6",
+    "href": "modules/module_1_data_cleaning.html#interprétation-6",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "17.1 Interprétation",
+    "text": "17.1 Interprétation\nCe résumé permet de repérer :\n\nles variables très dispersées ;\nles variables avec des valeurs extrêmes ;\nles variables avec des médianes très différentes des moyennes ;\nles variables qui pourraient nécessiter une transformation."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#comment-interpréter-un-histogramme",
+    "href": "modules/module_1_data_cleaning.html#comment-interpréter-un-histogramme",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "18.1 Comment interpréter un histogramme ?",
+    "text": "18.1 Comment interpréter un histogramme ?\nUn histogramme permet de voir :\n\nsi la variable est symétrique ;\nsi elle est asymétrique ;\nsi elle contient beaucoup de petites valeurs ;\nsi elle contient quelques grandes valeurs extrêmes ;\nsi une transformation log pourrait être utile."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-7",
+    "href": "modules/module_1_data_cleaning.html#interprétation-7",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "19.1 Interprétation",
+    "text": "19.1 Interprétation\nLes boxplots servent à repérer :\n\nla médiane ;\nla dispersion ;\nles valeurs extrêmes ;\nles variables très asymétriques."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#attention",
+    "href": "modules/module_1_data_cleaning.html#attention",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "20.1 Attention",
+    "text": "20.1 Attention\nUn outlier n’est pas automatiquement une erreur.\nEn biologie, une valeur extrême peut être :\n\nune vraie espèce atypique ;\nune erreur de saisie ;\nune observation rare ;\nun problème d’unité ;\nune donnée biologiquement intéressante.\n\nOn ne supprime jamais un outlier sans justification."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-8",
+    "href": "modules/module_1_data_cleaning.html#interprétation-8",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "22.1 Interprétation",
+    "text": "22.1 Interprétation\nCe graphique permet de voir :\n\nles catégories dominantes ;\nles variables très déséquilibrées ;\nles catégories rares ;\nles variables avec beaucoup de valeurs manquantes.\n\nUne variable catégorielle très déséquilibrée peut poser problème dans un modèle."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-9",
+    "href": "modules/module_1_data_cleaning.html#interprétation-9",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "24.1 Interprétation",
+    "text": "24.1 Interprétation\nUne corrélation proche de 1 indique une association positive forte.\nUne corrélation proche de -1 indique une association négative forte.\nUne corrélation proche de 0 indique peu d’association linéaire.\nAttention : une corrélation ne prouve pas une causalité."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-possible",
+    "href": "modules/module_1_data_cleaning.html#interprétation-possible",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "25.1 Interprétation possible",
+    "text": "25.1 Interprétation possible\nCe graphique permet d’explorer si les espèces plus grandes ont tendance à avoir des pontes plus grandes.\nÀ ce stade, on ne conclut pas encore statistiquement. On observe seulement une tendance possible."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-possible-1",
+    "href": "modules/module_1_data_cleaning.html#interprétation-possible-1",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "26.1 Interprétation possible",
+    "text": "26.1 Interprétation possible\nCe graphique permet de comparer la distribution d’une variable continue entre plusieurs groupes.\nSi la variable réponse est maximum_svl et le prédicteur est reproductive_mode, un modèle possible plus tard serait une régression linéaire, à condition de vérifier les hypothèses."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-possible-2",
+    "href": "modules/module_1_data_cleaning.html#interprétation-possible-2",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "27.1 Interprétation possible",
+    "text": "27.1 Interprétation possible\nCe graphique montre quelles combinaisons de catégories sont fréquentes.\nPour tester statistiquement l’association entre deux variables catégorielles, on pourrait envisager un test du chi-carré ou un modèle logistique/multinomial selon la question."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-10",
+    "href": "modules/module_1_data_cleaning.html#interprétation-10",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "28.1 Interprétation",
+    "text": "28.1 Interprétation\nLa PCA ne répond pas directement à une question de recherche causale ou prédictive.\nElle sert surtout à :\n\nexplorer la structure des données ;\nrésumer plusieurs variables numériques ;\nrepérer des groupes ou des observations atypiques ;\npréparer une analyse de clustering ou de modélisation."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#interprétation-11",
+    "href": "modules/module_1_data_cleaning.html#interprétation-11",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "31.1 Interprétation",
+    "text": "31.1 Interprétation\nLe fichier df_traits_module1_clean.csv sera utile comme version de travail.\nIl contient les variables catégorielles converties en facteurs dans R pendant la session, mais dans un CSV, les facteurs seront sauvegardés comme texte. Ce n’est pas un problème : on pourra les reconvertir au moment de les importer."
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#question-1",
+    "href": "modules/module_1_data_cleaning.html#question-1",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "34.1 Question 1",
+    "text": "34.1 Question 1\nCombien y a-t-il d’observations et de variables dans df_traits ?\n\n\nCode\ndim(df_traits)\n\n\n[1] 6612   14"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#question-2",
+    "href": "modules/module_1_data_cleaning.html#question-2",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "34.2 Question 2",
+    "text": "34.2 Question 2\nQuelles sont les variables numériques ?\n\n\nCode\nnumeric_vars\n\n\n[1] \"latitude\"              \"maximum_svl\"           \"hatchling_neonate_svl\"\n[4] \"largest_clutch\"        \"age_first_breeding\""
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#question-3",
+    "href": "modules/module_1_data_cleaning.html#question-3",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "34.3 Question 3",
+    "text": "34.3 Question 3\nQuelles variables ont plus de 40 % de valeurs manquantes ?\n\n\nCode\nmissing_summary %&gt;%\n  filter(pct_missing &gt; 40)"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#question-4",
+    "href": "modules/module_1_data_cleaning.html#question-4",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "34.4 Question 4",
+    "text": "34.4 Question 4\nQuelle variable serait la plus problématique à utiliser directement dans un modèle ?\n\n\nCode\nmissing_summary %&gt;%\n  slice_max(pct_missing, n = 1)"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#question-5",
+    "href": "modules/module_1_data_cleaning.html#question-5",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "34.5 Question 5",
+    "text": "34.5 Question 5\nEst-ce que maximum_svl pourrait être une variable réponse continue ?\n\n\nCode\nsummary(df_traits$maximum_svl)\n\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's \n  17.00   55.70   75.30   95.35  104.00 1570.00      24 \n\n\nCode\nhist(df_traits$maximum_svl)"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#correction-1",
+    "href": "modules/module_1_data_cleaning.html#correction-1",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "35.1 Correction 1",
+    "text": "35.1 Correction 1\nLe nombre d’observations correspond au nombre de lignes.\nLe nombre de variables correspond au nombre de colonnes.\n\n\nCode\nnrow(df_traits)\n\n\n[1] 6612\n\n\nCode\nncol(df_traits)\n\n\n[1] 14"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#correction-2",
+    "href": "modules/module_1_data_cleaning.html#correction-2",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "35.2 Correction 2",
+    "text": "35.2 Correction 2\nLes variables numériques sont identifiées avec is.numeric.\n\n\nCode\nnames(df_traits)[sapply(df_traits, is.numeric)]\n\n\n[1] \"latitude\"              \"maximum_svl\"           \"hatchling_neonate_svl\"\n[4] \"largest_clutch\"        \"age_first_breeding\""
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#correction-3",
+    "href": "modules/module_1_data_cleaning.html#correction-3",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "35.3 Correction 3",
+    "text": "35.3 Correction 3\nLes variables avec plus de 40 % de valeurs manquantes doivent être traitées avec prudence.\n\n\nCode\nmissing_summary %&gt;%\n  filter(pct_missing &gt; 40) %&gt;%\n  arrange(desc(pct_missing))"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#correction-4",
+    "href": "modules/module_1_data_cleaning.html#correction-4",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "35.4 Correction 4",
+    "text": "35.4 Correction 4\nLa variable la plus problématique est celle qui a le plus fort pourcentage de valeurs manquantes.\n\n\nCode\nmissing_summary %&gt;%\n  arrange(desc(pct_missing)) %&gt;%\n  head(1)"
+  },
+  {
+    "objectID": "modules/module_1_data_cleaning.html#correction-5",
+    "href": "modules/module_1_data_cleaning.html#correction-5",
+    "title": "Module 1 — Data Cleaning and Exploration",
+    "section": "35.5 Correction 5",
+    "text": "35.5 Correction 5\nmaximum_svl est une variable numérique. Elle peut donc être une variable réponse continue dans une régression linéaire, à condition de vérifier :\n\nla distribution ;\nles outliers ;\nla relation avec les prédicteurs ;\nles résidus du modèle ;\nl’indépendance des observations."
   }
 ]

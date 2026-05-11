@@ -1,63 +1,178 @@
 ---
 title: "Module 1 — Data Cleaning and Exploration"
+subtitle: "What Statistical Model Should I Use?"
+execute:
+  warning: false
+  message: false
 ---
 
 # Vue d’ensemble du module
 
-Le Module 1 sert à apprendre à connaître les données avant de choisir un modèle statistique.
+Le but de ce module est d’apprendre à **connaître les données avant de choisir un modèle statistique**.
 
-L’idée centrale est simple :
+L’idée centrale est :
 
-> On ne commence pas par choisir un modèle.\
-> On commence par comprendre les données.
+> On ne commence pas une analyse en choisissant directement un modèle.  
+> On commence par comprendre la question, la structure du tableau, les types de variables, les valeurs manquantes, les distributions, les outliers et les relations entre variables.
+
+Dans ce module, nous travaillons avec le fichier `df_traits.csv`, un jeu de données de traits biologiques de reptiles/lézards. Chaque ligne représente une espèce, et chaque colonne représente une information taxonomique, morphologique, écologique, reproductive ou de conservation.
 
 # Objectifs à maîtriser
 
-À la fin de ce module, je dois être capable de :
+À la fin du module, je dois être capable de :
 
-- importer un jeu de données dans R ;
-- inspecter sa structure ;
-- reconnaître les types de variables ;
-- nettoyer les noms de colonnes ;
-- détecter les doublons ;
-- repérer les valeurs manquantes ;
-- transformer les variables au bon format ;
-- réaliser une analyse exploratoire ;
-- préparer les données pour les modules suivants.
+1. importer un jeu de données dans R ;
+2. vérifier sa structure ;
+3. reconnaître les variables taxonomiques, numériques et catégorielles ;
+4. identifier les valeurs manquantes ;
+5. détecter les doublons ;
+6. résumer les variables continues et catégorielles ;
+7. visualiser les distributions ;
+8. repérer des outliers ;
+9. explorer les relations entre variables ;
+10. décider quelles variables peuvent être utilisées dans les analyses futures.
+
+# Pourquoi ce module est important ?
+
+Un modèle statistique ne peut pas corriger des données mal comprises.
+
+Avant de demander :
+
+> Quel modèle statistique dois-je utiliser ?
+
+je dois d’abord répondre à ces questions :
+
+| Question | Pourquoi c’est important |
+|---|---|
+| Quelle est l’unité d’observation ? | Pour savoir ce que représente une ligne |
+| Quelle est la variable réponse ? | Elle guide le choix du modèle |
+| La réponse est-elle continue, binaire, un comptage ou une catégorie ? | Chaque type de variable demande une famille de modèles différente |
+| Les données sont-elles complètes ? | Les valeurs manquantes peuvent biaiser les résultats |
+| Les variables sont-elles au bon format ? | R ne traite pas de la même façon un nombre, un texte et un facteur |
+| Y a-t-il des outliers ? | Les valeurs extrêmes peuvent influencer certains modèles |
+| Les variables sont-elles liées entre elles ? | Cela aide à construire une hypothèse et à préparer la modélisation |
+
+# Rappel théorique
+
+## Données tidy
+
+Un tableau est considéré comme **tidy** lorsque :
+
+| Principe | Exemple |
+|---|---|
+| Une ligne = une observation | une espèce |
+| Une colonne = une variable | taille, régime alimentaire, statut IUCN |
+| Une cellule = une valeur | 61 mm, carnivore, LC |
+
+Dans notre cas, si chaque ligne correspond à une espèce et chaque colonne à un trait, le tableau est déjà proche d’un format tidy.
+
+## Data cleaning
+
+Le **data cleaning** consiste à préparer les données pour l’analyse.
+
+Cela inclut :
+
+- corriger les noms de colonnes ;
+- retirer les colonnes inutiles ;
+- corriger les mauvais formats ;
+- convertir les variables catégorielles en facteurs ;
+- repérer les doublons ;
+- compter les valeurs manquantes ;
+- décider quelles variables garder ou exclure.
+
+## Analyse exploratoire des données
+
+L’**EDA**, ou exploratory data analysis, sert à comprendre les données avant la modélisation.
+
+Elle permet de voir :
+
+- la distribution des variables ;
+- les valeurs extrêmes ;
+- les catégories dominantes ;
+- les relations possibles entre variables ;
+- les variables trop incomplètes ;
+- les premières hypothèses biologiques.
 
 # Packages R
 
 ```{r}
-#| label: install-multiple
-#| include: false
-
-# Liste des packages à installer
-pkgs <- c("here", "tidyverse")
-
-# Installation uniquement si absent, en mode silencieux
-new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
-if(length(new_pkgs)) {
-  install.packages(new_pkgs, quiet = TRUE, verbose = FALSE)
-}
 library(tidyverse)
 library(here)
 ```
 
-# Vérifier le dossier du projet
+## Explication
+
+- `tidyverse` regroupe plusieurs packages utiles : `dplyr`, `ggplot2`, `tidyr`, `readr`, `forcats`, etc.
+- `here` permet de construire des chemins de fichiers à partir de la racine du projet Quarto.
+
+# Vérifier la racine du projet
 
 ```{r}
 here()
 ```
 
-La fonction `here()` permet de construire des chemins de fichiers robustes à partir de la racine du projet.
+## Interprétation
+
+La fonction `here()` doit retourner le dossier principal du projet, par exemple :
+
+```text
+C:/Users/Drarv/Downloads/stat_model_training
+```
+
+Si ce chemin est correct, les chemins vers les fichiers seront plus faciles à gérer.
 
 # Importation des données
 
-Pour ce module, on utilisera d’abord le fichier `df_traits.csv`, qui représente une version nettoyée des traits biologiques utilisée dans les modules suivants.
+Le fichier doit être placé dans l’un de ces dossiers :
+
+- `datasets/df_traits.csv`
+- `Data/df_traits.csv`
+
+Le code suivant cherche automatiquement le fichier dans ces emplacements.
 
 ```{r}
-df_traits <- read.csv(here("Data", "df_traits.csv"))
+
+  here("Data", "df_traits.csv")
+
 ```
+
+```{r}
+df_traits <- read.csv(here("Data", "df_traits.csv"), 
+                      stringsAsFactors = FALSE, 
+                      na.strings = c("", "NA", "N/A", "na", "NaN")) %>% 
+  as_tibble() %>% 
+  select(-any_of(c("index", "X")))
+
+df_traits
+
+```
+
+## Explication du code
+
+
+```r
+read.csv(...)
+```
+
+Importe le fichier CSV dans R.
+
+```r
+stringsAsFactors = FALSE
+```
+
+Empêche R de transformer automatiquement les textes en facteurs. On veut contrôler nous-mêmes cette étape.
+
+```r
+na.strings = c("", "NA", "N/A", "na", "NaN")
+```
+
+Indique à R quelles valeurs doivent être considérées comme manquantes.
+
+```r
+select(-any_of(c("index", "X")))
+```
+
+Retire une colonne d’index automatique si elle existe.
 
 # Première inspection du tableau
 
@@ -68,43 +183,78 @@ names(df_traits)
 head(df_traits)
 ```
 
-# Interprétation
+## Interprétation
 
-- `class()` indique le type d’objet R.
-- `dim()` donne le nombre de lignes et de colonnes.
-- `names()` affiche les noms de variables.
-- `head()` montre les premières lignes du tableau.
+- `class(df_traits)` indique le type d’objet R.
+- `dim(df_traits)` donne le nombre de lignes et de colonnes.
+- `names(df_traits)` affiche les noms de variables.
+- `head(df_traits)` montre les premières lignes du tableau.
+
+Dans nos premières sorties, le tableau contenait **6612 observations** et **14 variables**.
 
 # Structure des variables
 
 ```{r}
-str(df_traits)
+glimpse(df_traits)
 ```
 
-Cette commande est essentielle pour identifier :
+## Pourquoi utiliser `glimpse()` ?
 
-- les variables numériques ;
-- les variables catégorielles ;
-- les variables mal codées ;
-- les variables qui devront être transformées.
+`glimpse()` donne une vue compacte du tableau :
 
-# Mini-exercice 1
+- nom de chaque variable ;
+- type de variable ;
+- premières valeurs ;
+- aperçu général du jeu de données.
 
-Répondre aux questions suivantes :
+C’est une commande très utile au début de toute analyse.
 
-1.  Combien y a-t-il d’observations ?
-2.  Combien y a-t-il de variables ?
-3.  Quelles variables semblent numériques ?
-4.  Quelles variables semblent catégorielles ?
-5.  Est-ce que certaines variables semblent avoir des valeurs manquantes ?
+# Définir les colonnes taxonomiques et les traits
 
-# Vérification des valeurs manquantes
+Dans ce jeu de données, les variables `family`, `genus` et `species` sont des informations taxonomiques. Les autres colonnes sont des traits ou variables d’analyse.
 
 ```{r}
-colSums(is.na(df_traits))
+tax_cols <- c("family", "genus", "species")
+
+trait_cols <- setdiff(names(df_traits), tax_cols)
+
+tax_cols
+trait_cols
 ```
 
-# Pourcentage de valeurs manquantes
+## Interprétation
+
+Les colonnes taxonomiques servent surtout à identifier les espèces.
+
+Les traits peuvent servir comme :
+
+- variables réponses ;
+- prédicteurs ;
+- variables de regroupement ;
+- variables à explorer.
+
+# Vérifier les doublons
+
+Une question importante : est-ce qu’une même espèce apparaît plusieurs fois ?
+
+```{r}
+duplicated_species <- df_traits %>%
+  filter(duplicated(species) | duplicated(species, fromLast = TRUE)) %>%
+  arrange(species)
+
+nrow(duplicated_species)
+head(duplicated_species)
+```
+
+## Interprétation
+
+Si `nrow(duplicated_species)` vaut 0, il n’y a pas de doublons d’espèces.
+
+Si le résultat est supérieur à 0, il faut inspecter les lignes. Les doublons peuvent fausser les analyses, surtout si l’unité d’observation est l’espèce.
+
+# Résumé des valeurs manquantes
+
+Les valeurs manquantes sont centrales dans cette formation, car elles influencent fortement le choix des analyses.
 
 ```{r}
 missing_summary <- df_traits %>%
@@ -122,7 +272,33 @@ missing_summary <- df_traits %>%
 missing_summary
 ```
 
-# Visualisation des valeurs manquantes
+## Explication du code
+
+```r
+summarise(across(everything(), ~ sum(is.na(.))))
+```
+
+Calcule le nombre de valeurs manquantes pour chaque colonne.
+
+```r
+pivot_longer(...)
+```
+
+Transforme le tableau large en tableau long. C’est plus pratique pour visualiser.
+
+```r
+mutate(pct_missing = ...)
+```
+
+Ajoute le pourcentage de valeurs manquantes.
+
+```r
+arrange(desc(pct_missing))
+```
+
+Classe les variables de la plus incomplète à la plus complète.
+
+# Visualiser les valeurs manquantes
 
 ```{r}
 ggplot(missing_summary, aes(x = reorder(variable, pct_missing), y = pct_missing)) +
@@ -136,17 +312,679 @@ ggplot(missing_summary, aes(x = reorder(variable, pct_missing), y = pct_missing)
   theme_minimal()
 ```
 
+## Interprétation
+
+Les variables avec beaucoup de valeurs manquantes doivent être traitées avec prudence.
+
+Par exemple :
+
+- une variable avec 0 à 5 % de valeurs manquantes est souvent utilisable ;
+- une variable avec 20 à 40 % de valeurs manquantes demande une stratégie ;
+- une variable avec plus de 60 % de valeurs manquantes est très problématique ;
+- une variable avec plus de 80 % de valeurs manquantes ne devrait généralement pas être utilisée directement dans un modèle sans justification forte.
+
+# Classer les variables selon leur niveau de missingness
+
+```{r}
+missing_summary <- missing_summary %>%
+  mutate(
+    missing_category = case_when(
+      pct_missing == 0 ~ "Aucune valeur manquante",
+      pct_missing > 0 & pct_missing <= 5 ~ "Faible missingness",
+      pct_missing > 5 & pct_missing <= 40 ~ "Missingness modérée",
+      pct_missing > 40 & pct_missing <= 60 ~ "Missingness élevée",
+      pct_missing > 60 ~ "Missingness très élevée"
+    )
+  )
+
+missing_summary
+```
+
+## Interprétation biologique
+
+Une variable très incomplète n’est pas forcément inutile. Elle peut être biologiquement importante, mais elle nécessitera une réflexion :
+
+- exclusion ;
+- imputation ;
+- analyse de sensibilité ;
+- modèle adapté ;
+- remplacement par une variable plus complète.
+
+Cette réflexion sera approfondie au Module 2.
+
+# Identifier les types de variables
+
+```{r}
+numeric_vars <- names(df_traits)[sapply(df_traits, is.numeric)]
+
+categorical_vars <- names(df_traits)[sapply(df_traits, function(x) is.character(x) | is.factor(x))]
+
+numeric_vars
+categorical_vars
+```
+
+## Interprétation
+
+Les variables numériques peuvent représenter :
+
+- des variables continues : latitude, taille ;
+- des comptages : taille de ponte ;
+- des âges ;
+- des mesures biologiques.
+
+Les variables catégorielles peuvent représenter :
+
+- des familles taxonomiques ;
+- des régimes alimentaires ;
+- des modes reproductifs ;
+- des statuts de conservation.
+
+# Convertir les variables catégorielles en facteurs
+
+Dans R, il est souvent préférable que les variables catégorielles soient de type `factor`.
+
+```{r}
+df_traits_typed <- df_traits %>%
+  mutate(across(all_of(categorical_vars), as.factor))
+
+glimpse(df_traits_typed)
+```
+
+## Pourquoi convertir en facteur ?
+
+Un texte comme `"Carnivorous"` est seulement une chaîne de caractères.
+
+Un facteur indique à R :
+
+> Cette variable représente des catégories.
+
+C’est important pour les modèles statistiques, car R créera automatiquement des comparaisons entre catégories.
+
+# Résumé des variables numériques
+
+```{r}
+continuous_summary <- df_traits %>%
+  select(all_of(numeric_vars)) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  group_by(variable) %>%
+  summarise(
+    n = sum(!is.na(value)),
+    n_missing = sum(is.na(value)),
+    mean = mean(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE),
+    median = median(value, na.rm = TRUE),
+    q1 = quantile(value, 0.25, na.rm = TRUE),
+    q3 = quantile(value, 0.75, na.rm = TRUE),
+    min = min(value, na.rm = TRUE),
+    max = max(value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+continuous_summary
+```
+
+## Interprétation
+
+Ce résumé permet de repérer :
+
+- les variables très dispersées ;
+- les variables avec des valeurs extrêmes ;
+- les variables avec des médianes très différentes des moyennes ;
+- les variables qui pourraient nécessiter une transformation.
+
+# Visualiser les distributions numériques
+
+```{r}
+df_traits %>%
+  select(all_of(numeric_vars)) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  filter(!is.na(value)) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~ variable, scales = "free") +
+  labs(
+    title = "Distribution des variables numériques",
+    x = "Valeur",
+    y = "Fréquence"
+  ) +
+  theme_minimal()
+```
+
+## Comment interpréter un histogramme ?
+
+Un histogramme permet de voir :
+
+- si la variable est symétrique ;
+- si elle est asymétrique ;
+- si elle contient beaucoup de petites valeurs ;
+- si elle contient quelques grandes valeurs extrêmes ;
+- si une transformation log pourrait être utile.
+
+# Boxplots des variables numériques
+
+```{r}
+df_traits %>%
+  select(all_of(numeric_vars)) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  filter(!is.na(value)) %>%
+  ggplot(aes(x = variable, y = value)) +
+  geom_boxplot() +
+  coord_flip() +
+  facet_wrap(~ variable, scales = "free") +
+  labs(
+    title = "Boxplots des variables numériques",
+    x = "Variable",
+    y = "Valeur"
+  ) +
+  theme_minimal()
+```
+
+## Interprétation
+
+Les boxplots servent à repérer :
+
+- la médiane ;
+- la dispersion ;
+- les valeurs extrêmes ;
+- les variables très asymétriques.
+
+# Détection simple des outliers avec la règle IQR
+
+La règle IQR définit comme outliers les valeurs situées en dessous de :
+
+\[
+Q1 - 1.5 \times IQR
+\]
+
+ou au-dessus de :
+
+\[
+Q3 + 1.5 \times IQR
+\]
+
+où :
+
+\[
+IQR = Q3 - Q1
+\]
+
+```{r}
+detect_outliers_iqr <- function(x) {
+  q1 <- quantile(x, 0.25, na.rm = TRUE)
+  q3 <- quantile(x, 0.75, na.rm = TRUE)
+  iqr <- q3 - q1
+
+  lower_bound <- q1 - 1.5 * iqr
+  upper_bound <- q3 + 1.5 * iqr
+
+  sum(x < lower_bound | x > upper_bound, na.rm = TRUE)
+}
+
+outlier_summary <- tibble(
+  variable = numeric_vars,
+  n_outliers = map_int(numeric_vars, ~ detect_outliers_iqr(df_traits[[.x]]))
+) %>%
+  left_join(
+    missing_summary %>% select(variable, pct_missing),
+    by = "variable"
+  )
+
+outlier_summary
+```
+
+## Attention
+
+Un outlier n’est pas automatiquement une erreur.
+
+En biologie, une valeur extrême peut être :
+
+- une vraie espèce atypique ;
+- une erreur de saisie ;
+- une observation rare ;
+- un problème d’unité ;
+- une donnée biologiquement intéressante.
+
+On ne supprime jamais un outlier sans justification.
+
+# Résumé des variables catégorielles
+
+Nous allons maintenant regarder les catégories les plus fréquentes.
+
+```{r}
+cat_trait_vars <- setdiff(categorical_vars, tax_cols)
+
+categorical_summary <- df_traits %>%
+  select(all_of(cat_trait_vars)) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "category"
+  ) %>%
+  mutate(category = if_else(is.na(category), "Missing", as.character(category))) %>%
+  count(variable, category, sort = TRUE) %>%
+  group_by(variable) %>%
+  mutate(
+    pct = 100 * n / sum(n),
+    rank = row_number()
+  ) %>%
+  ungroup()
+
+categorical_summary
+```
+
+# Visualiser les variables catégorielles
+
+```{r}
+categorical_summary %>%
+  filter(rank <= 10) %>%
+  ggplot(aes(x = reorder(category, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~ variable, scales = "free_y") +
+  labs(
+    title = "Catégories les plus fréquentes par variable",
+    x = "Catégorie",
+    y = "Nombre d'observations"
+  ) +
+  theme_minimal()
+```
+
+## Interprétation
+
+Ce graphique permet de voir :
+
+- les catégories dominantes ;
+- les variables très déséquilibrées ;
+- les catégories rares ;
+- les variables avec beaucoup de valeurs manquantes.
+
+Une variable catégorielle très déséquilibrée peut poser problème dans un modèle.
+
+# Relations entre variables numériques
+
+```{r}
+cor_matrix <- df_traits %>%
+  select(all_of(numeric_vars)) %>%
+  cor(use = "pairwise.complete.obs")
+
+cor_matrix
+```
+
+# Visualiser la matrice de corrélation
+
+```{r}
+cor_matrix %>%
+  as.data.frame() %>%
+  rownames_to_column("var1") %>%
+  pivot_longer(
+    cols = -var1,
+    names_to = "var2",
+    values_to = "correlation"
+  ) %>%
+  ggplot(aes(x = var1, y = var2, fill = correlation)) +
+  geom_tile() +
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0,
+    limits = c(-1, 1)
+  ) +
+  labs(
+    title = "Corrélations entre variables numériques",
+    x = "",
+    y = "",
+    fill = "Corrélation"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Interprétation
+
+Une corrélation proche de 1 indique une association positive forte.
+
+Une corrélation proche de -1 indique une association négative forte.
+
+Une corrélation proche de 0 indique peu d’association linéaire.
+
+Attention : une corrélation ne prouve pas une causalité.
+
+# Exemple de relation : taille maximale et taille de ponte
+
+```{r}
+df_traits %>%
+  filter(!is.na(maximum_svl), !is.na(largest_clutch)) %>%
+  ggplot(aes(x = maximum_svl, y = largest_clutch)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "Relation entre la taille maximale et la taille de ponte",
+    x = "Taille maximale SVL",
+    y = "Plus grande taille de ponte"
+  ) +
+  theme_minimal()
+```
+
+## Interprétation possible
+
+Ce graphique permet d’explorer si les espèces plus grandes ont tendance à avoir des pontes plus grandes.
+
+À ce stade, on ne conclut pas encore statistiquement. On observe seulement une tendance possible.
+
+# Relation entre une variable numérique et une variable catégorielle
+
+Exemple : taille maximale selon le mode reproductif.
+
+```{r}
+df_traits %>%
+  filter(!is.na(maximum_svl), !is.na(reproductive_mode)) %>%
+  ggplot(aes(x = reproductive_mode, y = maximum_svl)) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(
+    title = "Taille maximale selon le mode reproductif",
+    x = "Mode reproductif",
+    y = "Taille maximale SVL"
+  ) +
+  theme_minimal()
+```
+
+## Interprétation possible
+
+Ce graphique permet de comparer la distribution d’une variable continue entre plusieurs groupes.
+
+Si la variable réponse est `maximum_svl` et le prédicteur est `reproductive_mode`, un modèle possible plus tard serait une régression linéaire, à condition de vérifier les hypothèses.
+
+# Relation entre deux variables catégorielles
+
+Exemple : régime alimentaire et mode reproductif.
+
+```{r}
+df_traits %>%
+  filter(!is.na(diet), !is.na(reproductive_mode)) %>%
+  count(diet, reproductive_mode) %>%
+  ggplot(aes(x = diet, y = reproductive_mode, fill = n)) +
+  geom_tile() +
+  labs(
+    title = "Association exploratoire entre régime alimentaire et mode reproductif",
+    x = "Régime alimentaire",
+    y = "Mode reproductif",
+    fill = "Nombre"
+  ) +
+  theme_minimal()
+```
+
+## Interprétation possible
+
+Ce graphique montre quelles combinaisons de catégories sont fréquentes.
+
+Pour tester statistiquement l’association entre deux variables catégorielles, on pourrait envisager un test du chi-carré ou un modèle logistique/multinomial selon la question.
+
+# Réduction de dimension simple : PCA
+
+La PCA est utile lorsque plusieurs variables numériques sont disponibles et que l’on veut résumer leur variation.
+
+Ici, nous allons utiliser seulement les variables numériques avec suffisamment d’observations complètes.
+
+```{r}
+pca_vars <- intersect(
+  c("latitude", "maximum_svl", "largest_clutch"),
+  names(df_traits)
+)
+
+pca_data <- df_traits %>%
+  select(species, all_of(pca_vars)) %>%
+  drop_na()
+
+nrow(pca_data)
+pca_vars
+```
+
+```{r}
+if (length(pca_vars) >= 2 && nrow(pca_data) > 20) {
+
+  pca_res <- prcomp(
+    pca_data %>% select(all_of(pca_vars)),
+    center = TRUE,
+    scale. = TRUE
+  )
+
+  print(summary(pca_res))
+
+  pca_scores <- as.data.frame(pca_res$x) %>%
+    bind_cols(pca_data %>% select(species))
+
+  ggplot(pca_scores, aes(x = PC1, y = PC2)) +
+    geom_point(alpha = 0.5) +
+    labs(
+      title = "PCA exploratoire sur quelques traits numériques",
+      x = "PC1",
+      y = "PC2"
+    ) +
+    theme_minimal()
+
+} else {
+  message("Pas assez de variables ou d'observations complètes pour faire une PCA.")
+}
+```
+
+## Interprétation
+
+La PCA ne répond pas directement à une question de recherche causale ou prédictive.
+
+Elle sert surtout à :
+
+- explorer la structure des données ;
+- résumer plusieurs variables numériques ;
+- repérer des groupes ou des observations atypiques ;
+- préparer une analyse de clustering ou de modélisation.
+
+# Choisir une question de recherche à partir de l’EDA
+
+Après l’exploration, on peut formuler des questions comme :
+
+| Question | Variable réponse | Type de réponse | Modèle possible plus tard |
+|---|---|---|---|
+| La taille maximale varie-t-elle selon le mode reproductif ? | `maximum_svl` | Continue | Régression linéaire |
+| Les espèces insulaires sont-elles plus souvent menacées ? | `iucn_redlist_assessment` simplifiée | Catégorielle/binaire | Régression logistique |
+| La taille de ponte augmente-t-elle avec la taille corporelle ? | `largest_clutch` | Comptage/numérique | Poisson, binomial négatif ou linéaire selon distribution |
+| Le régime alimentaire est-il associé au mode reproductif ? | `reproductive_mode` | Catégorielle | Chi-carré, logistique, multinomial |
+| Les espèces se regroupent-elles selon leurs traits ? | Plusieurs traits | Multivarié | PCA, clustering |
+
+# Comment savoir si les données sont prêtes pour un modèle ?
+
+Avant de modéliser, je dois vérifier :
+
+| Point à vérifier | Question |
+|---|---|
+| Variable réponse | Est-elle bien définie ? |
+| Type de réponse | Continue, binaire, comptage, catégorie ? |
+| Missingness | La variable réponse ou les prédicteurs ont-ils trop de NA ? |
+| Format | Les variables catégorielles sont-elles des facteurs ? |
+| Outliers | Y a-t-il des valeurs extrêmes à inspecter ? |
+| Indépendance | Une ligne correspond-elle bien à une observation indépendante ? |
+| Taille d’échantillon | Ai-je assez d’observations complètes ? |
+| Objectif | Est-ce une question d’association, de prédiction ou de causalité ? |
+
+# Exporter une version propre du jeu de données
+
+Nous sauvegardons une version typée du jeu de données pour les modules suivants.
+
+```{r}
+dir.create(here("datasets"), showWarnings = FALSE)
+
+write.csv(
+  df_traits_typed,
+  here("datasets", "df_traits_module1_clean.csv"),
+  row.names = FALSE
+)
+```
+
+## Interprétation
+
+Le fichier `df_traits_module1_clean.csv` sera utile comme version de travail.
+
+Il contient les variables catégorielles converties en facteurs dans R pendant la session, mais dans un CSV, les facteurs seront sauvegardés comme texte. Ce n’est pas un problème : on pourra les reconvertir au moment de les importer.
+
+# Erreurs fréquentes
+
+| Erreur | Cause probable | Correction |
+|---|---|---|
+| `object not found` | L’objet n’a pas été créé ou le chunk n’a pas été exécuté | Exécuter les chunks dans l’ordre |
+| `file not found` | Le fichier CSV n’est pas dans le bon dossier | Mettre le fichier dans `datasets/` ou `Data/` |
+| Une variable numérique apparaît comme texte | Présence de caractères ou mauvais import | Nettoyer puis convertir avec `as.numeric()` |
+| Graphique vide | Trop de valeurs manquantes | Vérifier avec `summary()` et `is.na()` |
+| Trop de catégories dans un graphique | Variable comme `species` ou `genus` | Exclure les identifiants taxonomiques |
+| Render Quarto échoue | YAML mal écrit ou package manquant | Vérifier l’en-tête YAML et installer le package |
+
 # Mini-fiche de révision
 
-| Fonction     | Rôle                                       |
-|--------------|--------------------------------------------|
-| `read.csv()` | Importer un fichier CSV                    |
-| `here()`     | Construire un chemin de fichier propre     |
-| `class()`    | Voir le type d’objet                       |
-| `dim()`      | Voir lignes et colonnes                    |
-| `names()`    | Voir les noms de variables                 |
-| `head()`     | Voir les premières lignes                  |
-| `str()`      | Voir la structure des variables            |
-| `is.na()`    | Détecter les valeurs manquantes            |
-| `colSums()`  | Compter les valeurs manquantes par colonne |
-| `ggplot()`   | Visualiser les données                     |
+| Fonction | Rôle |
+|---|---|
+| `read.csv()` | Importer un fichier CSV |
+| `here()` | Construire un chemin depuis la racine du projet |
+| `class()` | Voir le type d’objet |
+| `dim()` | Voir le nombre de lignes et colonnes |
+| `names()` | Voir les noms des variables |
+| `head()` | Voir les premières lignes |
+| `glimpse()` | Voir la structure compacte du tableau |
+| `is.na()` | Détecter les valeurs manquantes |
+| `summarise()` | Résumer les données |
+| `across()` | Appliquer une fonction à plusieurs colonnes |
+| `pivot_longer()` | Passer du format large au format long |
+| `ggplot()` | Construire un graphique |
+| `geom_histogram()` | Visualiser une distribution |
+| `geom_boxplot()` | Visualiser la dispersion et les outliers |
+| `cor()` | Calculer des corrélations |
+| `prcomp()` | Faire une PCA |
+| `write.csv()` | Exporter un fichier CSV |
+
+# Questions de pratique
+
+## Question 1
+
+Combien y a-t-il d’observations et de variables dans `df_traits` ?
+
+```{r}
+dim(df_traits)
+```
+
+## Question 2
+
+Quelles sont les variables numériques ?
+
+```{r}
+numeric_vars
+```
+
+## Question 3
+
+Quelles variables ont plus de 40 % de valeurs manquantes ?
+
+```{r}
+missing_summary %>%
+  filter(pct_missing > 40)
+```
+
+## Question 4
+
+Quelle variable serait la plus problématique à utiliser directement dans un modèle ?
+
+```{r}
+missing_summary %>%
+  slice_max(pct_missing, n = 1)
+```
+
+## Question 5
+
+Est-ce que `maximum_svl` pourrait être une variable réponse continue ?
+
+```{r}
+summary(df_traits$maximum_svl)
+hist(df_traits$maximum_svl)
+```
+
+# Correction détaillée
+
+## Correction 1
+
+Le nombre d’observations correspond au nombre de lignes.  
+Le nombre de variables correspond au nombre de colonnes.
+
+```{r}
+nrow(df_traits)
+ncol(df_traits)
+```
+
+## Correction 2
+
+Les variables numériques sont identifiées avec `is.numeric`.
+
+```{r}
+names(df_traits)[sapply(df_traits, is.numeric)]
+```
+
+## Correction 3
+
+Les variables avec plus de 40 % de valeurs manquantes doivent être traitées avec prudence.
+
+```{r}
+missing_summary %>%
+  filter(pct_missing > 40) %>%
+  arrange(desc(pct_missing))
+```
+
+## Correction 4
+
+La variable la plus problématique est celle qui a le plus fort pourcentage de valeurs manquantes.
+
+```{r}
+missing_summary %>%
+  arrange(desc(pct_missing)) %>%
+  head(1)
+```
+
+## Correction 5
+
+`maximum_svl` est une variable numérique. Elle peut donc être une variable réponse continue dans une régression linéaire, à condition de vérifier :
+
+- la distribution ;
+- les outliers ;
+- la relation avec les prédicteurs ;
+- les résidus du modèle ;
+- l’indépendance des observations.
+
+# Conclusion du Module 1
+
+Dans ce module, nous avons appris à :
+
+- importer un jeu de données ;
+- inspecter sa structure ;
+- identifier les variables taxonomiques et les traits ;
+- détecter les doublons ;
+- résumer les valeurs manquantes ;
+- distinguer variables numériques et catégorielles ;
+- convertir les catégories en facteurs ;
+- visualiser les distributions ;
+- détecter des outliers ;
+- explorer des relations entre variables ;
+- préparer les données pour les modules suivants.
+
+Le point le plus important à retenir est :
+
+> Le choix d’un modèle statistique commence toujours par la compréhension de la variable réponse, des prédicteurs, des valeurs manquantes et de la structure des données.
+
+Le prochain module portera sur la gestion des valeurs manquantes.
