@@ -1,990 +1,1421 @@
 ---
-title: "Module 1 — Data Cleaning and Exploration"
-subtitle: "What Statistical Model Should I Use?"
-execute:
-  warning: false
-  message: false
+title: "Module 1 — Data Cleaning and Exploration Review"
+subtitle: "Version fidèle au matériel original + explication du code"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    code-tools: true
+    df-print: paged
+editor: visual
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  fig.width = 8,
+  fig.height = 5
+)
+```
 
 # Vue d’ensemble du module
 
-Le but de ce module est d’apprendre à **connaître les données avant de choisir un modèle statistique**.
+Dans ce module, nous travaillons avec le fichier `Appendix+S1+-+Lizard+data+version+1.0.csv`, un jeu de données de traits biologiques de reptiles/lézards
 
-L’idée centrale est :
 
-> On ne commence pas une analyse en choisissant directement un modèle.  
-> On commence par comprendre la question, la structure du tableau, les types de variables, les valeurs manquantes, les distributions, les outliers et les relations entre variables.
+Le message central du module est :
 
-Dans ce module, nous travaillons avec le fichier `df_traits.csv`, un jeu de données de traits biologiques de reptiles/lézards. Chaque ligne représente une espèce, et chaque colonne représente une information taxonomique, morphologique, écologique, reproductive ou de conservation.
+> Même lorsqu’on connaît les statistiques, il faut d’abord apprendre à connaître ses données.
 
-# Objectifs à maîtriser
+# Théorie du Module 1
 
-À la fin du module, je dois être capable de :
+## Objectifs du module
 
-1. importer un jeu de données dans R ;
-2. vérifier sa structure ;
-3. reconnaître les variables taxonomiques, numériques et catégorielles ;
-4. identifier les valeurs manquantes ;
-5. détecter les doublons ;
-6. résumer les variables continues et catégorielles ;
-7. visualiser les distributions ;
-8. repérer des outliers ;
-9. explorer les relations entre variables ;
-10. décider quelles variables peuvent être utilisées dans les analyses futures.
+Le Module 1 a pour objectifs :
 
-# Pourquoi ce module est important ?
+- introduire l’analyse statistique **end-to-end** ;
+- donner une vue d’ensemble du processus d’analyse ;
+- montrer l’importance des données **tidy** ;
+- introduire des méthodes de nettoyage avancées ;
+- utiliser l’analyse exploratoire pour identifier des patterns et des relations entre variables.
 
-Un modèle statistique ne peut pas corriger des données mal comprises.
+## Idée centrale
 
-Avant de demander :
+On ne commence pas une analyse en choisissant directement un modèle.\
+On commence par comprendre :
 
-> Quel modèle statistique dois-je utiliser ?
+- l’unité d’observation ;
+- la structure du tableau ;
+- les types de variables ;
+- les valeurs manquantes ;
+- les outliers ;
+- les distributions ;
+- les relations entre variables.
 
-je dois d’abord répondre à ces questions :
+## Analyse end-to-end
 
-| Question | Pourquoi c’est important |
-|---|---|
-| Quelle est l’unité d’observation ? | Pour savoir ce que représente une ligne |
-| Quelle est la variable réponse ? | Elle guide le choix du modèle |
-| La réponse est-elle continue, binaire, un comptage ou une catégorie ? | Chaque type de variable demande une famille de modèles différente |
-| Les données sont-elles complètes ? | Les valeurs manquantes peuvent biaiser les résultats |
-| Les variables sont-elles au bon format ? | R ne traite pas de la même façon un nombre, un texte et un facteur |
-| Y a-t-il des outliers ? | Les valeurs extrêmes peuvent influencer certains modèles |
-| Les variables sont-elles liées entre elles ? | Cela aide à construire une hypothèse et à préparer la modélisation |
+Une analyse complète suit la chaîne :
 
-# Rappel théorique
+```{}
+Question biologique
+→ données brutes
+→ nettoyage
+→ exploration
+→ choix des variables
+→ choix du modèle
+→ diagnostic
+→ interprétation
+→ conclusion scientifique
+```
 
 ## Données tidy
 
-Un tableau est considéré comme **tidy** lorsque :
+Un tableau est tidy lorsque :
 
-| Principe | Exemple |
-|---|---|
-| Une ligne = une observation | une espèce |
-| Une colonne = une variable | taille, régime alimentaire, statut IUCN |
-| Une cellule = une valeur | 61 mm, carnivore, LC |
+| Principe                    | Exemple                           |
+|-----------------------------|-----------------------------------|
+| Une ligne = une observation | une espèce                        |
+| Une colonne = une variable  | `maximum_svl`, `diet`, `latitude` |
+| Une cellule = une valeur    | `61`, `Carnivorous`, `34.16`      |
 
-Dans notre cas, si chaque ligne correspond à une espèce et chaque colonne à un trait, le tableau est déjà proche d’un format tidy.
+## Data wrangling
 
-## Data cleaning
+Le data wrangling comprend :
 
-Le **data cleaning** consiste à préparer les données pour l’analyse.
+- sélectionner les variables d’intérêt ;
+- corriger les erreurs et les typos ;
+- assurer la cohérence des données ;
+- retirer les doublons ;
+- gérer les valeurs manquantes ;
+- vérifier les formats des variables ;
+- créer de nouvelles variables si nécessaire.
 
-Cela inclut :
+## Exploratory Data Analysis
 
-- corriger les noms de colonnes ;
-- retirer les colonnes inutiles ;
-- corriger les mauvais formats ;
-- convertir les variables catégorielles en facteurs ;
-- repérer les doublons ;
-- compter les valeurs manquantes ;
-- décider quelles variables garder ou exclure.
+L’EDA permet de :
 
-## Analyse exploratoire des données
+- comprendre les types de variables ;
+- détecter des patterns ;
+- repérer des associations ;
+- vérifier des anomalies ;
+- vérifier certaines hypothèses ;
+- guider le choix du modèle statistique.
 
-L’**EDA**, ou exploratory data analysis, sert à comprendre les données avant la modélisation.
+## Types de données
 
-Elle permet de voir :
+| Type statistique | Exemple | Modèle possible plus tard |
+|------------------------|------------------------|------------------------|
+| Continue | taille, masse | régression linéaire |
+| Comptage | nombre d’œufs | Poisson / binomial négatif |
+| Binaire | oui/non | régression logistique |
+| Multicatégorielle | activité, régime alimentaire | multinomial / classification |
+| Haute dimension | expression génique, SNPs | PCA, clustering, régularisation |
 
-- la distribution des variables ;
-- les valeurs extrêmes ;
-- les catégories dominantes ;
-- les relations possibles entre variables ;
-- les variables trop incomplètes ;
-- les premières hypothèses biologiques.
+::: callout-note
+Le type R n’est pas toujours le type statistique.\
+`largest_clutch` peut être `integer` dans R, mais statistiquement c’est un **comptage**.
+:::
 
-# Packages R
+## Feature engineering
+
+Le feature engineering inclut :
+
+- transformation log ;
+- scaling ;
+- normalisation ;
+- création de nouvelles variables ;
+- réduction de dimension comme la PCA.
+
+Ces étapes peuvent simplifier les modèles et rendre les analyses plus interprétables.
+
+# Lab 1 — Data wrangling 101
+
+## Charger les librairies
+
+### Objectif
+
+Charger les packages nécessaires pour manipuler les données, visualiser les variables et faire la PCA.
+
+### Code
 
 ```{r}
+# install.packages("tidyverse") # à faire une seule fois si le package n'est pas installé
+
 library(tidyverse)
+library(factoextra)
 library(here)
+
+# Le lab original charge aussi rfishbase.
+# Ici, on évite de bloquer le rendu si le package n'est pas installé.
+if (requireNamespace("rfishbase", quietly = TRUE)) {
+  library(rfishbase)
+} else {
+  message("rfishbase n'est pas installé. Le module peut continuer sans ce package.")
+}
 ```
 
-## Explication
+### Explication du code
 
-- `tidyverse` regroupe plusieurs packages utiles : `dplyr`, `ggplot2`, `tidyr`, `readr`, `forcats`, etc.
-- `here` permet de construire des chemins de fichiers à partir de la racine du projet Quarto.
+`library(tidyverse)` charge les packages essentiels comme `dplyr`, `ggplot2`, `tidyr`, `readr`, `stringr` et `forcats`.
 
-# Vérifier la racine du projet
+`library(factoextra)` sert plus tard à visualiser les résultats de PCA avec `fviz_eig()` et `fviz_pca_var()`.
+
+`library(here)` permet de construire des chemins de fichiers à partir de la racine du projet.
+
+`requireNamespace("rfishbase", quietly = TRUE)` vérifie si le package est installé sans générer une erreur bloquante.
+
+------------------------------------------------------------------------
+
+## Lire les données
+
+### Objectif
+
+Lire le fichier brut utilisé dans le lab original.
+
+### Vérifier le dossier de travail
 
 ```{r}
+getwd()
 here()
 ```
 
-## Interprétation
+### Explication
 
-La fonction `here()` doit retourner le dossier principal du projet, par exemple :
+`getwd()` indique le dossier de travail courant.\
+`here()` indique la racine du projet Quarto.
 
-```text
-C:/Users/Drarv/Downloads/stat_model_training
-```
-
-Si ce chemin est correct, les chemins vers les fichiers seront plus faciles à gérer.
-
-# Importation des données
-
-Le fichier doit être placé dans l’un de ces dossiers :
-
-- `datasets/df_traits.csv`
-- `Data/df_traits.csv`
-
-Le code suivant cherche automatiquement le fichier dans ces emplacements.
+### Définir les chemins possibles
 
 ```{r}
+raw_file <- "Appendix+S1+-+Lizard+data+version+1.0.csv"
+raw_paths <- c(here("Data", raw_file))
 
-  here("Data", "df_traits.csv")
+dfReptiles <- read.csv(raw_paths) # Use your file path
 
+raw_paths
+```
+
+
+### Explication du code
+
+`file.exists(raw_paths)` vérifie quels fichiers existent réellement.
+
+`raw_paths[file.exists(raw_paths)][1]` garde le premier chemin valide.
+
+`read.csv(raw_path)` importe le CSV.
+
+`stringsAsFactors = FALSE` évite la conversion automatique des textes en facteurs.
+
+`na.strings = ...` indique à R quelles valeurs doivent être considérées comme manquantes.
+
+## Looking at your data
+
+### Objectif
+
+Inspecter la structure du jeu de données.
+
+
+```{r}
+  class(dfReptiles)
+  dim(dfReptiles)
+  colnames(dfReptiles)
+  names(dfReptiles)[1:10]
+  head(dfReptiles, 10)
+```
+
+
+### Explication du code
+
+`class()` indique le type d’objet R.\
+`dim()` donne le nombre de lignes et de colonnes.\
+`colnames()` ou `names()` donne les noms des colonnes.\
+`head(..., 10)` affiche les 10 premières lignes.
+
+### Interprétation
+
+Le fichier brut contient beaucoup de colonnes. Plusieurs noms sont longs, avec des points et des informations supplémentaires. Cela justifie la création d’un tableau plus simple appelé `dfTraits`.
+
+------------------------------------------------------------------------
+
+## Sélectionner les colonnes utiles
+
+### Objectif
+
+Créer `dfTraits` à partir du tableau brut en gardant seulement les colonnes nécessaires à l’analyse des traits.
+
+
+```{r}
+  dfTraits <- dfReptiles %>%
+    select(c(
+      Binomial,
+      Genus,
+      Family,
+      main.biogeographic.Realm,
+      Latitude.centroid..from.Roll.et.al..2017.,
+      insular.endemic,
+      maximum.SVL,
+      hatchling.neonate.SVL,
+      Leg.development,
+      Activity.time,
+      substrate,
+      diet,
+      foraging.mode,
+      reproductive.mode,
+      smallest.clutch,
+      largest.clutch,
+      youngest.age.at.first.breeding..months.,
+      IUCN.redlist.assessment,
+      IUCN.population.trend,
+      Extant.Extinct
+    ))
+names(dfTraits)
+```
+
+### Explication du code
+
+`dfReptiles %>%` prend le tableau brut comme point de départ.
+
+`select(c(...))` sélectionne les colonnes utiles : taxonomie, biogéographie, morphologie, traits écologiques, traits reproductifs et statut de conservation.
+
+`dfTraits <-` sauvegarde ce nouveau tableau.
+
+### Objet créé
+
+`dfTraits` est le tableau principal du Module 1.
+
+------------------------------------------------------------------------
+
+## Nettoyer les noms de colonnes
+
+### Objectif
+
+Rendre les noms de colonnes plus courts et plus faciles à utiliser.
+
+### Code
+
+```{r}
+names(dfTraits) <- tolower(names(dfTraits))
+names(dfTraits) <- gsub("\\.", "_", names(dfTraits))
+
+names(dfTraits)
+```
+
+### Raccourcir certains noms
+
+```{r}
+names(dfTraits)[names(dfTraits) == "binomial"] <- "species"
+names(dfTraits)[names(dfTraits) == "latitude_centroid__from_roll_et_al__2017_"] <- "latitude"
+names(dfTraits)[names(dfTraits) == "youngest_age_at_first_breeding__months_"] <- "age_first_breeding"
+
+names(dfTraits)
+```
+
+### Explication du code
+
+`tolower()` met tous les noms en minuscules.
+
+`gsub("\\.", "_", ...)` remplace les points par des underscores.
+
+Le renommage permet de passer de noms longs comme `youngest_age_at_first_breeding__months_` à `age_first_breeding`.
+
+------------------------------------------------------------------------
+
+## Remplacer les blancs par NA
+
+### Objectif
+
+Harmoniser les valeurs manquantes.
+
+
+```{r}
+dfTraits[dfTraits == " "] <- NA
+```
+
+### Bonification
+
+```{r}
+dfTraits[dfTraits == ""] <- NA
+```
+
+### Explication
+
+`dfTraits == " "` teste toutes les cellules du tableau.\
+`dfTraits[dfTraits == " "] <- NA` remplace les espaces par de vrais `NA`.
+
+### Pourquoi c’est important ?
+
+Si une cellule contient un espace, elle semble vide, mais R ne la reconnaît pas nécessairement comme valeur manquante.
+
+## Vérifier les duplications d’espèces
+
+### Objectif
+
+S’assurer qu’une espèce ne se retrouve pas deux fois.
+
+### Code fidèle au lab
+
+```{r}
+duplicated(dfTraits$species)
+sum(duplicated(dfTraits$species))
+```
+
+### Inspecter les doublons
+
+```{r}
+dfDuplicates <- dfTraits %>%
+  filter(duplicated(species) | duplicated(species, fromLast = TRUE))
+
+dfDuplicates
+```
+
+### Explication
+
+`duplicated(dfTraits$species)` retourne `TRUE` pour les espèces qui sont des duplications.
+
+`sum()` compte les `TRUE`.
+
+Si le résultat vaut `0`, il n’y a pas de duplication.
+
+------------------------------------------------------------------------
+
+## Identifier les espèces sans données de traits
+
+### Objectif
+
+Repérer les lignes qui n’ont aucune donnée en dehors des colonnes taxonomiques.
+
+
+```{r}
+missRows <- apply(
+  dfTraits[, -(1:3)],
+  MARGIN = 1,
+  function(x) all(is.na(x))
+)
+
+sum(missRows)
+```
+
+### Décomposition du code
+
+```{r}
+is.na(dfTraits[1, ])
+dfTraits[1, ]
+all(is.na(dfTraits[1, -(1:3)]))
+any(is.na(dfTraits[1, ]))
+```
+
+### Retirer ces lignes
+
+```{r}
+dfTraits <- dfTraits[!missRows, ]
+dim(dfTraits)
+```
+
+### Explication
+
+`dfTraits[, -(1:3)]` retire les trois premières colonnes : `species`, `genus`, `family`.
+
+`apply(..., MARGIN = 1, ...)` applique une fonction ligne par ligne.
+
+`all(is.na(x))` vérifie si toutes les valeurs d’une ligne sont manquantes.
+
+`!missRows` garde les lignes qui ne sont pas entièrement manquantes.
+
+------------------------------------------------------------------------
+
+## Working with different data types
+
+### Objectif
+
+Identifier les variables taxonomiques, les traits, les traits numériques et les traits catégoriels.
+
+### Code
+
+```{r}
+names(dfTraits)
+
+taxCols <- c("species", "genus", "family")
+traits <- setdiff(names(dfTraits), taxCols)
+
+traits
+```
+
+### Classes R des traits
+
+```{r}
+sapply(dfTraits[traits], class)
+```
+
+### Explication
+
+`taxCols` contient les colonnes d’identification taxonomique.
+
+`setdiff(names(dfTraits), taxCols)` garde toutes les colonnes sauf `species`, `genus` et `family`.
+
+`sapply(dfTraits[traits], class)` applique `class()` à chaque trait.
+
+------------------------------------------------------------------------
+
+## Identifier traits numériques et catégoriels
+
+
+```{r}
+index <- sapply(dfTraits[traits], is.numeric)
+index
+
+contTraits <- traits[index]
+contTraits
+
+catTraits <- setdiff(traits, contTraits)
+catTraits
+```
+
+### Explication
+
+`is.numeric()` teste si une colonne est numérique.
+
+`traits[index]` garde les traits numériques.
+
+`setdiff(traits, contTraits)` garde les traits non numériques, donc les traits catégoriels.
+
+### Point important
+
+À ce stade, on remarque que `maximum_svl` et `hatchling_neonate_svl` peuvent être lus comme `character` même s’ils devraient être numériques.
+
+```{r}
+if ("maximum_svl" %in% names(dfTraits)) {
+  class(dfTraits$maximum_svl)
+}
+```
+
+## Corriger les variables numériques mal lues
+
+### Objectif
+
+Corriger les colonnes `maximum_svl` et `hatchling_neonate_svl` si elles sont lues comme du texte.
+
+### Pourquoi ce problème arrive ?
+
+Si une colonne contient des nombres mélangés à du texte, R peut lire toute la colonne comme `character`.
+
+Exemple :
+
+| Valeur       | Problème         |
+|--------------|------------------|
+| `61`         | numérique        |
+| `58.8`       | numérique        |
+| `approx. 45` | texte + nombre   |
+| `< 20`       | symbole + nombre |
+| `unknown`    | texte            |
+
+### Version 1
+
+Cette version remplace les valeurs contenant des lettres par `NA`, puis convertit en numérique.
+
+```{r, eval=FALSE}
+dfTraits$maximum_svl <- gsub(pattern = "[a-zA-Z]", replacement = NA, x = dfTraits$maximum_svl)
+dfTraits$hatchling_neonate_svl <- gsub("[a-zA-Z]", NA, dfTraits$hatchling_neonate_svl)
+
+dfTraits[, c("maximum_svl", "hatchling_neonate_svl")] <- lapply(
+  dfTraits[, c("maximum_svl", "hatchling_neonate_svl")],
+  as.numeric
+)
+```
+
+### Explication de la version 1
+
+`gsub("[a-zA-Z]", NA, x)` cherche les lettres dans les cellules et remplace par `NA`.
+
+`as.numeric()` convertit ensuite les colonnes en nombres.
+
+`lapply()` applique la conversion à plusieurs colonnes.
+
+### Bonification pédagogique : audit avant nettoyage
+
+Cette version est plus fine : elle inspecte les valeurs suspectes avant de modifier les données.
+
+```{r}
+num_maybe_dirty <- intersect(
+  c("maximum_svl", "hatchling_neonate_svl"),
+  names(dfTraits)
+)
+
+num_maybe_dirty
+sapply(dfTraits[num_maybe_dirty], class)
 ```
 
 ```{r}
-df_traits <- read.csv(here("Data", "df_traits.csv"), 
-                      stringsAsFactors = FALSE, 
-                      na.strings = c("", "NA", "N/A", "na", "NaN")) %>% 
-  as_tibble() %>% 
-  select(-any_of(c("index", "X")))
-
-df_traits
-
-```
-
-## Explication du code
-
-
-```r
-read.csv(...)
-```
-
-Importe le fichier CSV dans R.
-
-```r
-stringsAsFactors = FALSE
-```
-
-Empêche R de transformer automatiquement les textes en facteurs. On veut contrôler nous-mêmes cette étape.
-
-```r
-na.strings = c("", "NA", "N/A", "na", "NaN")
-```
-
-Indique à R quelles valeurs doivent être considérées comme manquantes.
-
-```r
-select(-any_of(c("index", "X")))
-```
-
-Retire une colonne d’index automatique si elle existe.
-
-# Première inspection du tableau
-
-```{r}
-class(df_traits)
-dim(df_traits)
-names(df_traits)
-head(df_traits)
-```
-
-## Interprétation
-
-- `class(df_traits)` indique le type d’objet R.
-- `dim(df_traits)` donne le nombre de lignes et de colonnes.
-- `names(df_traits)` affiche les noms de variables.
-- `head(df_traits)` montre les premières lignes du tableau.
-
-Dans nos premières sorties, le tableau contenait **6612 observations** et **14 variables**.
-
-# Structure des variables
-
-```{r}
-glimpse(df_traits)
-```
-
-## Pourquoi utiliser `glimpse()` ?
-
-`glimpse()` donne une vue compacte du tableau :
-
-- nom de chaque variable ;
-- type de variable ;
-- premières valeurs ;
-- aperçu général du jeu de données.
-
-C’est une commande très utile au début de toute analyse.
-
-# Définir les colonnes taxonomiques et les traits
-
-Dans ce jeu de données, les variables `family`, `genus` et `species` sont des informations taxonomiques. Les autres colonnes sont des traits ou variables d’analyse.
-
-```{r}
-tax_cols <- c("family", "genus", "species")
-
-trait_cols <- setdiff(names(df_traits), tax_cols)
-
-tax_cols
-trait_cols
-```
-
-## Interprétation
-
-Les colonnes taxonomiques servent surtout à identifier les espèces.
-
-Les traits peuvent servir comme :
-
-- variables réponses ;
-- prédicteurs ;
-- variables de regroupement ;
-- variables à explorer.
-
-# Vérifier les doublons
-
-Une question importante : est-ce qu’une même espèce apparaît plusieurs fois ?
-
-```{r}
-duplicated_species <- df_traits %>%
-  filter(duplicated(species) | duplicated(species, fromLast = TRUE)) %>%
-  arrange(species)
-
-nrow(duplicated_species)
-head(duplicated_species)
-```
-
-## Interprétation
-
-Si `nrow(duplicated_species)` vaut 0, il n’y a pas de doublons d’espèces.
-
-Si le résultat est supérieur à 0, il faut inspecter les lignes. Les doublons peuvent fausser les analyses, surtout si l’unité d’observation est l’espèce.
-
-# Résumé des valeurs manquantes
-
-Les valeurs manquantes sont centrales dans cette formation, car elles influencent fortement le choix des analyses.
-
-```{r}
-missing_summary <- df_traits %>%
-  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+dirty_values_audit <- dfTraits %>%
+  select(all_of(num_maybe_dirty)) %>%
   pivot_longer(
     cols = everything(),
     names_to = "variable",
-    values_to = "n_missing"
+    values_to = "original_value"
   ) %>%
   mutate(
-    pct_missing = 100 * n_missing / nrow(df_traits)
+    original_value_chr = str_squish(as.character(original_value)),
+    contains_letters = str_detect(original_value_chr, "[A-Za-z]"),
+    contains_symbols = str_detect(original_value_chr, "[<>~≈]|[-–]"),
+    parsed_number = readr::parse_number(original_value_chr)
   ) %>%
-  arrange(desc(pct_missing))
+  filter(
+    !is.na(original_value_chr),
+    contains_letters | contains_symbols
+  ) %>%
+  distinct()
 
-missing_summary
+dirty_values_audit
 ```
 
-## Explication du code
+### Explication du code d’audit
 
-```r
-summarise(across(everything(), ~ sum(is.na(.))))
-```
+`pivot_longer()` met les colonnes au format long pour faciliter l’inspection.
 
-Calcule le nombre de valeurs manquantes pour chaque colonne.
+`str_squish()` retire les espaces inutiles.
 
-```r
-pivot_longer(...)
-```
+`str_detect(..., "[A-Za-z]")` détecte les lettres.
 
-Transforme le tableau large en tableau long. C’est plus pratique pour visualiser.
+`str_detect(..., "[<>~≈]|[-–]")` détecte des symboles ou intervalles.
 
-```r
-mutate(pct_missing = ...)
-```
+`parse_number()` extrait un nombre à partir d’une chaîne de texte.
 
-Ajoute le pourcentage de valeurs manquantes.
-
-```r
-arrange(desc(pct_missing))
-```
-
-Classe les variables de la plus incomplète à la plus complète.
-
-# Visualiser les valeurs manquantes
+### Fonction de nettoyage bonifiée
 
 ```{r}
-ggplot(missing_summary, aes(x = reorder(variable, pct_missing), y = pct_missing)) +
-  geom_col() +
-  coord_flip() +
-  labs(
-    title = "Pourcentage de valeurs manquantes par variable",
-    x = "Variable",
-    y = "% de valeurs manquantes"
-  ) +
-  theme_minimal()
+clean_numeric_trait <- function(x) {
+  x_chr <- as.character(x)
+  x_chr <- str_squish(x_chr)
+
+  x_chr[x_chr %in% c("", " ", "NA", "N/A", "na", "NaN")] <- NA_character_
+
+  x_num <- readr::parse_number(x_chr)
+
+  return(x_num)
+}
 ```
 
-## Interprétation
-
-Les variables avec beaucoup de valeurs manquantes doivent être traitées avec prudence.
-
-Par exemple :
-
-- une variable avec 0 à 5 % de valeurs manquantes est souvent utilisable ;
-- une variable avec 20 à 40 % de valeurs manquantes demande une stratégie ;
-- une variable avec plus de 60 % de valeurs manquantes est très problématique ;
-- une variable avec plus de 80 % de valeurs manquantes ne devrait généralement pas être utilisée directement dans un modèle sans justification forte.
-
-# Classer les variables selon leur niveau de missingness
+### Appliquer la fonction
 
 ```{r}
-missing_summary <- missing_summary %>%
-  mutate(
-    missing_category = case_when(
-      pct_missing == 0 ~ "Aucune valeur manquante",
-      pct_missing > 0 & pct_missing <= 5 ~ "Faible missingness",
-      pct_missing > 5 & pct_missing <= 40 ~ "Missingness modérée",
-      pct_missing > 40 & pct_missing <= 60 ~ "Missingness élevée",
-      pct_missing > 60 ~ "Missingness très élevée"
-    )
+if (length(num_maybe_dirty) > 0) {
+  dfTraits[num_maybe_dirty] <- lapply(
+    dfTraits[num_maybe_dirty],
+    clean_numeric_trait
   )
+}
 
-missing_summary
+sapply(dfTraits[num_maybe_dirty], class)
 ```
 
-## Interprétation biologique
+### Interprétation
 
-Une variable très incomplète n’est pas forcément inutile. Elle peut être biologiquement importante, mais elle nécessitera une réflexion :
+Cette méthode conserve plus d’information que le remplacement direct par `NA`. Elle permet par exemple de récupérer `45` dans `"approx. 45"`.
 
-- exclusion ;
-- imputation ;
-- analyse de sensibilité ;
-- modèle adapté ;
-- remplacement par une variable plus complète.
+Mais il faut inspecter `dirty_values_audit`, car certaines valeurs comme `10-15` peuvent être ambiguës.
 
-Cette réflexion sera approfondie au Module 2.
+------------------------------------------------------------------------
 
-# Identifier les types de variables
+## Réidentifier les traits numériques et catégoriels
+
+### Code
 
 ```{r}
-numeric_vars <- names(df_traits)[sapply(df_traits, is.numeric)]
+index <- sapply(dfTraits[traits], is.numeric)
 
-categorical_vars <- names(df_traits)[sapply(df_traits, function(x) is.character(x) | is.factor(x))]
+contTraits <- traits[index]
+contTraits
 
-numeric_vars
-categorical_vars
+catTraits <- setdiff(traits, contTraits)
+catTraits
 ```
 
-## Interprétation
+### Pourquoi refaire cette étape ?
 
-Les variables numériques peuvent représenter :
+Parce que `maximum_svl` et `hatchling_neonate_svl` peuvent maintenant être reconnues comme numériques.
 
-- des variables continues : latitude, taille ;
-- des comptages : taille de ponte ;
-- des âges ;
-- des mesures biologiques.
+------------------------------------------------------------------------
 
-Les variables catégorielles peuvent représenter :
+## Convertir les variables catégorielles en facteurs
 
-- des familles taxonomiques ;
-- des régimes alimentaires ;
-- des modes reproductifs ;
-- des statuts de conservation.
+### Objectif
 
-# Convertir les variables catégorielles en facteurs
+Convertir les variables catégorielles en `factor`.
 
-Dans R, il est souvent préférable que les variables catégorielles soient de type `factor`.
 
 ```{r}
-df_traits_typed <- df_traits %>%
-  mutate(across(all_of(categorical_vars), as.factor))
-
-glimpse(df_traits_typed)
+dfTraits[catTraits] <- lapply(dfTraits[catTraits], as.factor)
 ```
 
-## Pourquoi convertir en facteur ?
-
-Un texte comme `"Carnivorous"` est seulement une chaîne de caractères.
-
-Un facteur indique à R :
-
-> Cette variable représente des catégories.
-
-C’est important pour les modèles statistiques, car R créera automatiquement des comparaisons entre catégories.
-
-# Résumé des variables numériques
+### Définir une catégorie de référence
 
 ```{r}
-continuous_summary <- df_traits %>%
-  select(all_of(numeric_vars)) %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = "variable",
-    values_to = "value"
-  ) %>%
-  group_by(variable) %>%
-  summarise(
-    n = sum(!is.na(value)),
-    n_missing = sum(is.na(value)),
-    mean = mean(value, na.rm = TRUE),
-    sd = sd(value, na.rm = TRUE),
-    median = median(value, na.rm = TRUE),
-    q1 = quantile(value, 0.25, na.rm = TRUE),
-    q3 = quantile(value, 0.75, na.rm = TRUE),
-    min = min(value, na.rm = TRUE),
-    max = max(value, na.rm = TRUE),
+if ("insular_endemic" %in% names(dfTraits)) {
+  table(dfTraits$insular_endemic)
+
+  if ("no" %in% levels(dfTraits$insular_endemic)) {
+    dfTraits$insular_endemic <- relevel(dfTraits$insular_endemic, "no")
+  }
+}
+```
+
+### Vérifier
+
+```{r}
+sapply(dfTraits, class)
+```
+
+### Explication
+
+`as.factor()` indique à R que la variable représente des catégories.
+
+`relevel(..., "no")` définit `"no"` comme catégorie de référence pour les analyses statistiques.
+
+# Summary Stats
+
+## Résumé général
+
+```{r}
+summary(dfTraits)
+```
+
+### Explication
+
+`summary()` donne :
+
+- minimum, quartiles, moyenne et maximum pour les variables numériques ;
+- fréquences des catégories pour les facteurs ;
+- nombre de valeurs manquantes.
+
+------------------------------------------------------------------------
+
+## Garder seulement les espèces extantes
+
+
+```{r}
+if ("extant_extinct" %in% names(dfTraits)) {
+  dfTraits <- dfTraits %>%
+    filter(extant_extinct == "extant") %>%
+    select(-extant_extinct)
+
+  catTraits <- setdiff(catTraits, "extant_extinct")
+}
+
+catTraits
+```
+
+### Explication
+
+`filter(extant_extinct == "extant")` garde seulement les espèces existantes.
+
+`select(-extant_extinct)` retire la colonne, car après filtrage elle n’est plus utile.
+
+------------------------------------------------------------------------
+
+## Nombre de familles
+
+```{r}
+unique(dfTraits$family)
+length(unique(dfTraits$family))
+```
+
+### Top 10 familles
+
+```{r}
+head(sort(table(dfTraits$family), decreasing = TRUE), n = 10)
+```
+
+### Version tidyverse
+
+```{r}
+dfTraits %>%
+  dplyr::count(family, sort = TRUE) %>%
+  head(n = 10)
+```
+
+### Explication
+
+`unique()` liste les valeurs distinctes.
+
+`length(unique(...))` compte le nombre de familles.
+
+`table()` compte les observations par famille.
+
+`dplyr::count(family, sort = TRUE)` fait la même chose avec tidyverse.
+
+------------------------------------------------------------------------
+
+## Résumer `maximum_svl`
+
+```{r}
+head(na.omit(dfTraits$maximum_svl))
+length(na.omit(dfTraits$maximum_svl))
+mean(dfTraits$maximum_svl, na.rm = TRUE)
+range(dfTraits$maximum_svl, na.rm = TRUE)
+sum(is.na(dfTraits$maximum_svl))
+sum(is.na(dfTraits$maximum_svl)) / length(dfTraits$maximum_svl)
+```
+
+### Explication
+
+`na.omit()` retire les valeurs manquantes.
+
+`length()` compte le nombre d’observations complètes.
+
+`mean(..., na.rm = TRUE)` calcule la moyenne sans les `NA`.
+
+`range(..., na.rm = TRUE)` donne le minimum et le maximum.
+
+`sum(is.na(...))` compte les valeurs manquantes.
+
+------------------------------------------------------------------------
+
+## Résumer tous les traits numériques
+
+```{r}
+l_contInfo <- lapply(dfTraits[contTraits], function(x) {
+  n <- length(na.omit(x))
+  avg <- mean(x, na.rm = TRUE)
+  numNAs <- sum(is.na(x))
+  propNAs <- sum(is.na(x)) / length(x)
+
+  return(data.frame(n, avg, numNAs, propNAs))
+})
+
+head(l_contInfo[[1]])
+```
+
+```{r}
+dfContInfo <- do.call(rbind, l_contInfo)
+dfContInfo
+```
+
+### Explication
+
+`lapply()` applique une fonction à chaque colonne numérique.
+
+La fonction calcule :
+
+- `n` : nombre de valeurs non manquantes ;
+- `avg` : moyenne ;
+- `numNAs` : nombre de valeurs manquantes ;
+- `propNAs` : proportion de valeurs manquantes.
+
+`do.call(rbind, ...)` combine tous les petits tableaux en un seul.
+
+------------------------------------------------------------------------
+
+## Résumer les traits catégoriels
+
+```{r}
+lapply(dfTraits[catTraits], table)
+```
+
+```{r}
+l_catInfo <- lapply(dfTraits[catTraits], function(x) {
+  n <- length(na.omit(x))
+  cats <- length(unique(x))
+  numNAs <- sum(is.na(x))
+  propNAs <- sum(is.na(x)) / length(x)
+
+  return(data.frame(n, cats, numNAs, propNAs))
+})
+
+dfCatInfo <- do.call(rbind, l_catInfo)
+dfCatInfo
+```
+
+### Explication
+
+`table()` donne les fréquences de chaque catégorie.
+
+`length(unique(x))` donne le nombre de catégories.
+
+------------------------------------------------------------------------
+
+## Résumés par famille
+
+```{r}
+summary_stats1 <- dfTraits %>%
+  group_by(family) %>%
+  summarize(avg_length = mean(maximum_svl, na.rm = TRUE)) %>%
+  arrange(desc(avg_length)) %>%
+  print()
+```
+
+```{r}
+summary_stats2 <- dfTraits %>%
+  group_by(family) %>%
+  summarize(
+    avg_length = mean(maximum_svl, na.rm = TRUE),
+    avg_lc = mean(largest_clutch, na.rm = TRUE),
+    top_diet = names(sort(table(diet), decreasing = TRUE)[1]),
     .groups = "drop"
-  )
-
-continuous_summary
+  ) %>%
+  print()
 ```
 
-## Interprétation
+### Explication
 
-Ce résumé permet de repérer :
+`group_by(family)` regroupe par famille.
 
-- les variables très dispersées ;
-- les variables avec des valeurs extrêmes ;
-- les variables avec des médianes très différentes des moyennes ;
-- les variables qui pourraient nécessiter une transformation.
+`summarize()` calcule des statistiques par groupe.
 
-# Visualiser les distributions numériques
+`arrange(desc(avg_length))` trie les familles selon la taille moyenne.
+
+`top_diet` donne le régime alimentaire le plus fréquent dans chaque famille.
+
+# Exploratory Plots
+
+## Histogrammes base R
 
 ```{r}
-df_traits %>%
-  select(all_of(numeric_vars)) %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = "variable",
-    values_to = "value"
-  ) %>%
-  filter(!is.na(value)) %>%
-  ggplot(aes(x = value)) +
-  geom_histogram(bins = 30) +
-  facet_wrap(~ variable, scales = "free") +
-  labs(
-    title = "Distribution des variables numériques",
-    x = "Valeur",
-    y = "Fréquence"
+hist(dfTraits$maximum_svl)
+hist(dfTraits$latitude)
+```
+
+### Interprétation
+
+`maximum_svl` peut être très asymétrique avec quelques espèces très grandes.
+
+`latitude` permet de voir la distribution géographique des espèces.
+
+------------------------------------------------------------------------
+
+## Histogramme avec ggplot2
+
+```{r}
+ggplot(dfTraits) +
+  geom_histogram(
+    mapping = aes(x = latitude),
+    fill = "skyblue",
+    colour = "black"
   ) +
-  theme_minimal()
-```
-
-## Comment interpréter un histogramme ?
-
-Un histogramme permet de voir :
-
-- si la variable est symétrique ;
-- si elle est asymétrique ;
-- si elle contient beaucoup de petites valeurs ;
-- si elle contient quelques grandes valeurs extrêmes ;
-- si une transformation log pourrait être utile.
-
-# Boxplots des variables numériques
-
-```{r}
-df_traits %>%
-  select(all_of(numeric_vars)) %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = "variable",
-    values_to = "value"
-  ) %>%
-  filter(!is.na(value)) %>%
-  ggplot(aes(x = variable, y = value)) +
-  geom_boxplot() +
-  coord_flip() +
-  facet_wrap(~ variable, scales = "free") +
   labs(
-    title = "Boxplots des variables numériques",
-    x = "Variable",
-    y = "Valeur"
+    title = "Reptile Latitude",
+    x = "Latitude (°)",
+    y = "Count"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 ```
 
-## Interprétation
+### Explication
 
-Les boxplots servent à repérer :
+`ggplot(dfTraits)` initialise le graphique.
 
-- la médiane ;
-- la dispersion ;
-- les valeurs extrêmes ;
-- les variables très asymétriques.
+`geom_histogram()` demande un histogramme.
 
-# Détection simple des outliers avec la règle IQR
+`aes(x = latitude)` indique que `latitude` est sur l’axe x.
 
-La règle IQR définit comme outliers les valeurs situées en dessous de :
+`labs()` ajoute les titres.
 
-\[
-Q1 - 1.5 \times IQR
-\]
+`theme_minimal()` simplifie le style.
 
-ou au-dessus de :
+------------------------------------------------------------------------
 
-\[
-Q3 + 1.5 \times IQR
-\]
+## Barplot pour `diet`
 
-où :
-
-\[
-IQR = Q3 - Q1
-\]
+### Base R
 
 ```{r}
-detect_outliers_iqr <- function(x) {
-  q1 <- quantile(x, 0.25, na.rm = TRUE)
-  q3 <- quantile(x, 0.75, na.rm = TRUE)
-  iqr <- q3 - q1
+plot(dfTraits$diet)
+```
 
-  lower_bound <- q1 - 1.5 * iqr
-  upper_bound <- q3 + 1.5 * iqr
+### ggplot2
 
-  sum(x < lower_bound | x > upper_bound, na.rm = TRUE)
-}
-
-outlier_summary <- tibble(
-  variable = numeric_vars,
-  n_outliers = map_int(numeric_vars, ~ detect_outliers_iqr(df_traits[[.x]]))
-) %>%
-  left_join(
-    missing_summary %>% select(variable, pct_missing),
-    by = "variable"
+```{r}
+ggplot(data = dfTraits %>% filter(!is.na(diet))) +
+  geom_bar(mapping = aes(x = diet, fill = diet), width = 0.7) +
+  scale_fill_brewer(palette = "Paired") +
+  labs(
+    title = "Diet Types in Reptiles",
+    x = "Diet",
+    y = "Count"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "none"
   )
-
-outlier_summary
 ```
 
-## Attention
+### Explication
 
-Un outlier n’est pas automatiquement une erreur.
+`filter(!is.na(diet))` retire les valeurs manquantes de `diet`.
 
-En biologie, une valeur extrême peut être :
+`geom_bar()` compte les observations par catégorie.
 
-- une vraie espèce atypique ;
-- une erreur de saisie ;
-- une observation rare ;
-- un problème d’unité ;
-- une donnée biologiquement intéressante.
+`scale_fill_brewer()` ajoute une palette de couleurs.
 
-On ne supprime jamais un outlier sans justification.
+------------------------------------------------------------------------
 
-# Résumé des variables catégorielles
-
-Nous allons maintenant regarder les catégories les plus fréquentes.
+## Relations entre variables numériques
 
 ```{r}
-cat_trait_vars <- setdiff(categorical_vars, tax_cols)
+plot(dfTraits[contTraits])
+```
 
-categorical_summary <- df_traits %>%
-  select(all_of(cat_trait_vars)) %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = "variable",
-    values_to = "category"
-  ) %>%
-  mutate(category = if_else(is.na(category), "Missing", as.character(category))) %>%
-  count(variable, category, sort = TRUE) %>%
-  group_by(variable) %>%
+### Explication
+
+Cette commande produit une matrice de scatter plots entre toutes les variables numériques.
+
+Elle sert à détecter rapidement les relations et les valeurs extrêmes.
+
+------------------------------------------------------------------------
+
+## Corrélations
+
+```{r}
+cor(dfTraits[contTraits], use = "pairwise.complete.obs")
+```
+
+### Explication
+
+`cor()` calcule les corrélations entre variables numériques.
+
+`use = "pairwise.complete.obs"` utilise toutes les paires disponibles malgré les `NA`.
+
+::: callout-warning
+Une corrélation ne prouve pas une relation causale.
+:::
+
+------------------------------------------------------------------------
+
+## Test de corrélation
+
+```{r}
+cor.test(dfTraits$hatchling_neonate_svl, dfTraits$age_first_breeding)
+```
+
+```{r}
+ggplot(data = dfTraits) +
+  geom_point(mapping = aes(x = age_first_breeding, y = hatchling_neonate_svl))
+```
+
+### Explication
+
+`cor.test()` teste si la corrélation est statistiquement différente de 0.
+
+`geom_point()` visualise la relation.
+
+------------------------------------------------------------------------
+
+## Normalité : histogramme et QQ plot
+
+```{r}
+hist(dfTraits$hatchling_neonate_svl)
+qqnorm(dfTraits$hatchling_neonate_svl)
+qqline(dfTraits$hatchling_neonate_svl)
+```
+
+### Explication
+
+`qqnorm()` compare la distribution observée à une distribution normale.
+
+`qqline()` ajoute une ligne de référence.
+
+Si les points suivent la ligne, la variable ressemble à une distribution normale.
+
+------------------------------------------------------------------------
+
+## Transformation log
+
+```{r}
+hist(dfTraits$hatchling_neonate_svl)
+hist(log(dfTraits$hatchling_neonate_svl))
+
+qqnorm(log(dfTraits$hatchling_neonate_svl))
+qqline(log(dfTraits$hatchling_neonate_svl))
+```
+
+### Explication
+
+`log()` réduit l’influence des grandes valeurs et peut rendre une distribution plus symétrique.
+
+------------------------------------------------------------------------
+
+## Créer des variables log-transformées
+
+```{r}
+dfTraits <- dfTraits %>%
   mutate(
-    pct = 100 * n / sum(n),
-    rank = row_number()
-  ) %>%
-  ungroup()
-
-categorical_summary
-```
-
-# Visualiser les variables catégorielles
-
-```{r}
-categorical_summary %>%
-  filter(rank <= 10) %>%
-  ggplot(aes(x = reorder(category, n), y = n)) +
-  geom_col() +
-  coord_flip() +
-  facet_wrap(~ variable, scales = "free_y") +
-  labs(
-    title = "Catégories les plus fréquentes par variable",
-    x = "Catégorie",
-    y = "Nombre d'observations"
-  ) +
-  theme_minimal()
-```
-
-## Interprétation
-
-Ce graphique permet de voir :
-
-- les catégories dominantes ;
-- les variables très déséquilibrées ;
-- les catégories rares ;
-- les variables avec beaucoup de valeurs manquantes.
-
-Une variable catégorielle très déséquilibrée peut poser problème dans un modèle.
-
-# Relations entre variables numériques
-
-```{r}
-cor_matrix <- df_traits %>%
-  select(all_of(numeric_vars)) %>%
-  cor(use = "pairwise.complete.obs")
-
-cor_matrix
-```
-
-# Visualiser la matrice de corrélation
-
-```{r}
-cor_matrix %>%
-  as.data.frame() %>%
-  rownames_to_column("var1") %>%
-  pivot_longer(
-    cols = -var1,
-    names_to = "var2",
-    values_to = "correlation"
-  ) %>%
-  ggplot(aes(x = var1, y = var2, fill = correlation)) +
-  geom_tile() +
-  scale_fill_gradient2(
-    low = "blue",
-    mid = "white",
-    high = "red",
-    midpoint = 0,
-    limits = c(-1, 1)
-  ) +
-  labs(
-    title = "Corrélations entre variables numériques",
-    x = "",
-    y = "",
-    fill = "Corrélation"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-## Interprétation
-
-Une corrélation proche de 1 indique une association positive forte.
-
-Une corrélation proche de -1 indique une association négative forte.
-
-Une corrélation proche de 0 indique peu d’association linéaire.
-
-Attention : une corrélation ne prouve pas une causalité.
-
-# Exemple de relation : taille maximale et taille de ponte
-
-```{r}
-df_traits %>%
-  filter(!is.na(maximum_svl), !is.na(largest_clutch)) %>%
-  ggplot(aes(x = maximum_svl, y = largest_clutch)) +
-  geom_point(alpha = 0.4) +
-  geom_smooth(method = "lm", se = TRUE) +
-  labs(
-    title = "Relation entre la taille maximale et la taille de ponte",
-    x = "Taille maximale SVL",
-    y = "Plus grande taille de ponte"
-  ) +
-  theme_minimal()
-```
-
-## Interprétation possible
-
-Ce graphique permet d’explorer si les espèces plus grandes ont tendance à avoir des pontes plus grandes.
-
-À ce stade, on ne conclut pas encore statistiquement. On observe seulement une tendance possible.
-
-# Relation entre une variable numérique et une variable catégorielle
-
-Exemple : taille maximale selon le mode reproductif.
-
-```{r}
-df_traits %>%
-  filter(!is.na(maximum_svl), !is.na(reproductive_mode)) %>%
-  ggplot(aes(x = reproductive_mode, y = maximum_svl)) +
-  geom_boxplot() +
-  coord_flip() +
-  labs(
-    title = "Taille maximale selon le mode reproductif",
-    x = "Mode reproductif",
-    y = "Taille maximale SVL"
-  ) +
-  theme_minimal()
-```
-
-## Interprétation possible
-
-Ce graphique permet de comparer la distribution d’une variable continue entre plusieurs groupes.
-
-Si la variable réponse est `maximum_svl` et le prédicteur est `reproductive_mode`, un modèle possible plus tard serait une régression linéaire, à condition de vérifier les hypothèses.
-
-# Relation entre deux variables catégorielles
-
-Exemple : régime alimentaire et mode reproductif.
-
-```{r}
-df_traits %>%
-  filter(!is.na(diet), !is.na(reproductive_mode)) %>%
-  count(diet, reproductive_mode) %>%
-  ggplot(aes(x = diet, y = reproductive_mode, fill = n)) +
-  geom_tile() +
-  labs(
-    title = "Association exploratoire entre régime alimentaire et mode reproductif",
-    x = "Régime alimentaire",
-    y = "Mode reproductif",
-    fill = "Nombre"
-  ) +
-  theme_minimal()
-```
-
-## Interprétation possible
-
-Ce graphique montre quelles combinaisons de catégories sont fréquentes.
-
-Pour tester statistiquement l’association entre deux variables catégorielles, on pourrait envisager un test du chi-carré ou un modèle logistique/multinomial selon la question.
-
-# Réduction de dimension simple : PCA
-
-La PCA est utile lorsque plusieurs variables numériques sont disponibles et que l’on veut résumer leur variation.
-
-Ici, nous allons utiliser seulement les variables numériques avec suffisamment d’observations complètes.
-
-```{r}
-pca_vars <- intersect(
-  c("latitude", "maximum_svl", "largest_clutch"),
-  names(df_traits)
-)
-
-pca_data <- df_traits %>%
-  select(species, all_of(pca_vars)) %>%
-  drop_na()
-
-nrow(pca_data)
-pca_vars
-```
-
-```{r}
-if (length(pca_vars) >= 2 && nrow(pca_data) > 20) {
-
-  pca_res <- prcomp(
-    pca_data %>% select(all_of(pca_vars)),
-    center = TRUE,
-    scale. = TRUE
+    log_hatchling_neonate_svl = log(hatchling_neonate_svl),
+    log_age_first_breeding = log(age_first_breeding)
   )
 
-  print(summary(pca_res))
-
-  pca_scores <- as.data.frame(pca_res$x) %>%
-    bind_cols(pca_data %>% select(species))
-
-  ggplot(pca_scores, aes(x = PC1, y = PC2)) +
-    geom_point(alpha = 0.5) +
-    labs(
-      title = "PCA exploratoire sur quelques traits numériques",
-      x = "PC1",
-      y = "PC2"
-    ) +
-    theme_minimal()
-
-} else {
-  message("Pas assez de variables ou d'observations complètes pour faire une PCA.")
-}
+names(dfTraits)
 ```
 
-## Interprétation
+### Explication
 
-La PCA ne répond pas directement à une question de recherche causale ou prédictive.
+`mutate()` ajoute de nouvelles colonnes au tableau.
 
-Elle sert surtout à :
+On garde les variables originales et on ajoute les versions transformées.
 
-- explorer la structure des données ;
-- résumer plusieurs variables numériques ;
-- repérer des groupes ou des observations atypiques ;
-- préparer une analyse de clustering ou de modélisation.
+------------------------------------------------------------------------
 
-# Choisir une question de recherche à partir de l’EDA
-
-Après l’exploration, on peut formuler des questions comme :
-
-| Question | Variable réponse | Type de réponse | Modèle possible plus tard |
-|---|---|---|---|
-| La taille maximale varie-t-elle selon le mode reproductif ? | `maximum_svl` | Continue | Régression linéaire |
-| Les espèces insulaires sont-elles plus souvent menacées ? | `iucn_redlist_assessment` simplifiée | Catégorielle/binaire | Régression logistique |
-| La taille de ponte augmente-t-elle avec la taille corporelle ? | `largest_clutch` | Comptage/numérique | Poisson, binomial négatif ou linéaire selon distribution |
-| Le régime alimentaire est-il associé au mode reproductif ? | `reproductive_mode` | Catégorielle | Chi-carré, logistique, multinomial |
-| Les espèces se regroupent-elles selon leurs traits ? | Plusieurs traits | Multivarié | PCA, clustering |
-
-# Comment savoir si les données sont prêtes pour un modèle ?
-
-Avant de modéliser, je dois vérifier :
-
-| Point à vérifier | Question |
-|---|---|
-| Variable réponse | Est-elle bien définie ? |
-| Type de réponse | Continue, binaire, comptage, catégorie ? |
-| Missingness | La variable réponse ou les prédicteurs ont-ils trop de NA ? |
-| Format | Les variables catégorielles sont-elles des facteurs ? |
-| Outliers | Y a-t-il des valeurs extrêmes à inspecter ? |
-| Indépendance | Une ligne correspond-elle bien à une observation indépendante ? |
-| Taille d’échantillon | Ai-je assez d’observations complètes ? |
-| Objectif | Est-ce une question d’association, de prédiction ou de causalité ? |
-
-# Exporter une version propre du jeu de données
-
-Nous sauvegardons une version typée du jeu de données pour les modules suivants.
+## Relation après transformation
 
 ```{r}
-dir.create(here("datasets"), showWarnings = FALSE)
-
-write.csv(
-  df_traits_typed,
-  here("datasets", "df_traits_module1_clean.csv"),
-  row.names = FALSE
-)
+ggplot(
+  data = dfTraits,
+  aes(x = log_hatchling_neonate_svl, y = log_age_first_breeding)
+) +
+  geom_point(color = "skyblue", size = 2, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "darkblue", linewidth = 0.5) +
+  theme_minimal(base_size = 12)
 ```
 
-## Interprétation
+### Explication
 
-Le fichier `df_traits_module1_clean.csv` sera utile comme version de travail.
+`geom_smooth(method = "lm")` ajoute une droite de régression exploratoire.
 
-Il contient les variables catégorielles converties en facteurs dans R pendant la session, mais dans un CSV, les facteurs seront sauvegardés comme texte. Ce n’est pas un problème : on pourra les reconvertir au moment de les importer.
+`alpha = 0.7` rend les points semi-transparents.
 
-# Erreurs fréquentes
+------------------------------------------------------------------------
 
-| Erreur | Cause probable | Correction |
-|---|---|---|
-| `object not found` | L’objet n’a pas été créé ou le chunk n’a pas été exécuté | Exécuter les chunks dans l’ordre |
-| `file not found` | Le fichier CSV n’est pas dans le bon dossier | Mettre le fichier dans `datasets/` ou `Data/` |
-| Une variable numérique apparaît comme texte | Présence de caractères ou mauvais import | Nettoyer puis convertir avec `as.numeric()` |
-| Graphique vide | Trop de valeurs manquantes | Vérifier avec `summary()` et `is.na()` |
-| Trop de catégories dans un graphique | Variable comme `species` ou `genus` | Exclure les identifiants taxonomiques |
-| Render Quarto échoue | YAML mal écrit ou package manquant | Vérifier l’en-tête YAML et installer le package |
+## Boxplot SVL selon IUCN
 
-# Mini-fiche de révision
+```{r}
+ggplot(
+  data = dfTraits,
+  mapping = aes(x = iucn_redlist_assessment, y = log(maximum_svl))
+) +
+  geom_boxplot(aes(fill = iucn_redlist_assessment)) +
+  scale_fill_brewer(palette = "Blues") +
+  labs(
+    title = "SVL Distribution by IUCN Redlist Assessment in Reptiles",
+    x = "IUCN Redlist Assessment",
+    y = "Log Maximum SVL"
+  ) +
+  coord_flip() +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "none")
+```
 
-| Fonction | Rôle |
-|---|---|
-| `read.csv()` | Importer un fichier CSV |
-| `here()` | Construire un chemin depuis la racine du projet |
-| `class()` | Voir le type d’objet |
-| `dim()` | Voir le nombre de lignes et colonnes |
-| `names()` | Voir les noms des variables |
-| `head()` | Voir les premières lignes |
-| `glimpse()` | Voir la structure compacte du tableau |
-| `is.na()` | Détecter les valeurs manquantes |
-| `summarise()` | Résumer les données |
-| `across()` | Appliquer une fonction à plusieurs colonnes |
-| `pivot_longer()` | Passer du format large au format long |
-| `ggplot()` | Construire un graphique |
-| `geom_histogram()` | Visualiser une distribution |
-| `geom_boxplot()` | Visualiser la dispersion et les outliers |
-| `cor()` | Calculer des corrélations |
-| `prcomp()` | Faire une PCA |
-| `write.csv()` | Exporter un fichier CSV |
+### Explication
+
+`geom_boxplot()` compare une variable numérique entre plusieurs groupes.
+
+`coord_flip()` rend les catégories plus lisibles.
+
+------------------------------------------------------------------------
+
+## Association entre deux variables catégorielles
+
+```{r}
+ggplot(data = dfTraits %>% filter(!is.na(diet))) +
+  geom_count(mapping = aes(x = diet, y = iucn_redlist_assessment)) +
+  labs(
+    x = "Diet",
+    y = "IUCN Redlist Assessment"
+  ) +
+  scale_size_continuous(range = c(2, 10), name = "Count") +
+  theme_minimal(base_size = 12)
+```
+
+### Explication
+
+`geom_count()` affiche un point pour chaque combinaison de catégories. La taille du point indique le nombre d’observations.
+
+# Outlier Detection
+
+## Objectif
+
+Identifier les espèces très longues et réfléchir à leur nature.
+
+## Boxplots de `maximum_svl` par famille
+
+```{r}
+ggplot(data = dfTraits %>% filter(!is.na(maximum_svl))) +
+  geom_boxplot(
+    mapping = aes(x = family, y = maximum_svl),
+    outlier.color = "red"
+  ) +
+  coord_flip()
+```
+
+### Explication
+
+Les points rouges sont les outliers détectés par `geom_boxplot()`.
+
+Le graphique permet de voir si certaines familles contiennent beaucoup d’espèces très grandes.
+
+## Méthode interquartile
+
+```{r}
+quantile(dfTraits[, "maximum_svl"], na.rm = TRUE)
+
+lowerQuantile <- quantile(dfTraits[, "maximum_svl"], na.rm = TRUE)[2]
+upperQuantile <- quantile(dfTraits[, "maximum_svl"], na.rm = TRUE)[4]
+
+upperQuantile
+
+iqr <- upperQuantile - lowerQuantile
+
+upperThreshold <- (iqr * 3) + upperQuantile
+
+outliers <- which(dfTraits[, "maximum_svl"] > upperThreshold)
+
+dfOutliers <- dfTraits[outliers, c("family", "genus", "species", "maximum_svl")]
+
+head(dfOutliers)
+```
+
+### Explication
+
+`quantile()` calcule les quartiles.
+
+`lowerQuantile` correspond à Q1.
+
+`upperQuantile` correspond à Q3.
+
+`iqr` est l’intervalle interquartile.
+
+`upperThreshold <- (iqr * 3) + upperQuantile` définit un seuil supérieur conservateur.
+
+`which()` donne les indices des lignes qui dépassent ce seuil.
+
+`dfOutliers` contient les informations taxonomiques des outliers.
+
+::: callout-important
+Un outlier ne doit pas être supprimé automatiquement. Il faut vérifier s’il s’agit d’une erreur, d’un problème d’unité ou d’une vraie observation biologique.
+:::
+
+# Dimensionality Reduction
+
+## Objectif
+
+Utiliser la PCA pour résumer plusieurs variables numériques.
+
+## Créer un tableau pour la PCA
+
+```{r}
+colnames(dfTraits)
+
+dfPCA <- as.data.frame(na.omit(dfTraits[contTraits]))
+
+dim(dfPCA)
+head(dfPCA)
+```
+
+### Explication
+
+`dfTraits[contTraits]` sélectionne les variables numériques.
+
+`na.omit()` retire les lignes avec au moins un `NA`.
+
+`as.data.frame()` garantit que l’objet est un data frame.
+
+::: callout-warning
+`na.omit()` peut retirer beaucoup de lignes si plusieurs variables ont des valeurs manquantes. Le Module 2 approfondira cette question.
+:::
+
+## Réaliser la PCA
+
+```{r}
+pcaRes <- prcomp(dfPCA, center = TRUE, scale. = TRUE)
+
+pcaRes$sdev
+```
+
+## Rotation / loadings
+
+```{r}
+pcaRes$rotation
+```
+
+## Scores PCA
+
+```{r}
+head(pcaRes$x)
+```
+
+### Explication
+
+`prcomp()` réalise la PCA.
+
+`center = TRUE` centre les variables.
+
+`scale. = TRUE` standardise les variables.
+
+`pcaRes$sdev` donne l’écart-type de chaque composante.
+
+`pcaRes$rotation` donne la contribution des variables aux composantes.
+
+`pcaRes$x` donne les coordonnées des observations dans l’espace PCA.
+
+## Variance expliquée
+
+```{r}
+summary(pcaRes)
+```
+
+## Scree plot
+
+```{r}
+fviz_eig(pcaRes, addlabels = TRUE)
+```
+
+### Explication
+
+`summary(pcaRes)` indique la proportion de variance expliquée par chaque composante.
+
+`fviz_eig()` visualise cette variance expliquée.
+
+## Visualiser les variables dans la PCA
+
+```{r}
+fviz_pca_var(
+  pcaRes,
+  col.var = "contrib",
+  gradient.cols = "Paired",
+  repel = TRUE,
+  xlab = "Principal Component 1",
+  ylab = "Principal Component 2"
+) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+```
+
+### Explication
+
+`fviz_pca_var()` affiche les variables originales dans l’espace des composantes principales.
+
+`col.var = "contrib"` colore les variables selon leur contribution.
+
+`repel = TRUE` évite le chevauchement des étiquettes.
+
+### Interprétation
+
+- Longues flèches : variables qui contribuent beaucoup.
+- Flèches proches : variables positivement corrélées.
+- Flèches opposées : variables négativement corrélées.
+- Flèches perpendiculaires : faible relation linéaire.
+
+## Extraire les composantes
+
+```{r}
+pca_scores <- as.data.frame(pcaRes$x)
+
+head(pca_scores)
+```
+
+### Interprétation
+
+Les composantes principales peuvent être utilisées plus tard comme nouveaux prédicteurs.
+
+# Lab completed
+
+À ce stade, le Lab 1 est terminé.
+
+# Résumé du Module 1
+
+Dans ce module, nous avons appris à :
+
+1.  charger les packages ;
+2.  lire les données ;
+3.  inspecter un tableau ;
+4.  sélectionner les variables utiles ;
+5.  nettoyer les noms de colonnes ;
+6.  remplacer les blancs par `NA` ;
+7.  détecter les doublons ;
+8.  identifier les lignes sans traits ;
+9.  distinguer traits numériques et catégoriels ;
+10. corriger des variables mal lues ;
+11. convertir les catégories en facteurs ;
+12. résumer les variables ;
+13. visualiser les distributions ;
+14. explorer les relations ;
+15. détecter des outliers ;
+16. faire une PCA exploratoire.
 
 # Questions de pratique
 
 ## Question 1
 
-Combien y a-t-il d’observations et de variables dans `df_traits` ?
-
-```{r}
-dim(df_traits)
-```
+Pourquoi commence-t-on par `class()`, `dim()`, `colnames()` et `head()` ?
 
 ## Question 2
 
-Quelles sont les variables numériques ?
-
-```{r}
-numeric_vars
-```
+Pourquoi crée-t-on `dfTraits` ?
 
 ## Question 3
 
-Quelles variables ont plus de 40 % de valeurs manquantes ?
-
-```{r}
-missing_summary %>%
-  filter(pct_missing > 40)
-```
+Pourquoi nettoie-t-on les noms de colonnes ?
 
 ## Question 4
 
-Quelle variable serait la plus problématique à utiliser directement dans un modèle ?
-
-```{r}
-missing_summary %>%
-  slice_max(pct_missing, n = 1)
-```
+Pourquoi remplace-t-on les blancs par `NA` ?
 
 ## Question 5
 
-Est-ce que `maximum_svl` pourrait être une variable réponse continue ?
+Pourquoi `maximum_svl` peut-elle être lue comme `character` ?
 
-```{r}
-summary(df_traits$maximum_svl)
-hist(df_traits$maximum_svl)
-```
+## Question 6
 
-# Correction détaillée
+Quelle est la différence entre `contTraits` et `catTraits` ?
+
+## Question 7
+
+Pourquoi convertir les variables catégorielles en facteurs ?
+
+## Question 8
+
+Pourquoi utiliser une transformation log ?
+
+## Question 9
+
+Pourquoi ne supprime-t-on pas automatiquement les outliers ?
+
+## Question 10
+
+À quoi sert la PCA ?
+
+# Corrections
 
 ## Correction 1
 
-Le nombre d’observations correspond au nombre de lignes.  
-Le nombre de variables correspond au nombre de colonnes.
-
-```{r}
-nrow(df_traits)
-ncol(df_traits)
-```
+Ces fonctions permettent de comprendre la structure du tableau : type d’objet, dimensions, noms de variables et premières lignes.
 
 ## Correction 2
 
-Les variables numériques sont identifiées avec `is.numeric`.
-
-```{r}
-names(df_traits)[sapply(df_traits, is.numeric)]
-```
+`dfTraits` garde seulement les colonnes utiles pour l’analyse des traits.
 
 ## Correction 3
 
-Les variables avec plus de 40 % de valeurs manquantes doivent être traitées avec prudence.
-
-```{r}
-missing_summary %>%
-  filter(pct_missing > 40) %>%
-  arrange(desc(pct_missing))
-```
+Des noms courts et cohérents rendent le code plus lisible et réduisent les erreurs.
 
 ## Correction 4
 
-La variable la plus problématique est celle qui a le plus fort pourcentage de valeurs manquantes.
-
-```{r}
-missing_summary %>%
-  arrange(desc(pct_missing)) %>%
-  head(1)
-```
+Les blancs peuvent représenter des valeurs manquantes, mais R ne les reconnaît pas toujours comme `NA`.
 
 ## Correction 5
 
-`maximum_svl` est une variable numérique. Elle peut donc être une variable réponse continue dans une régression linéaire, à condition de vérifier :
+Si une colonne contient des nombres mélangés avec du texte ou des symboles, R peut lire toute la colonne comme du texte.
 
-- la distribution ;
-- les outliers ;
-- la relation avec les prédicteurs ;
-- les résidus du modèle ;
-- l’indépendance des observations.
+## Correction 6
 
-# Conclusion du Module 1
+`contTraits` contient les traits numériques. `catTraits` contient les traits catégoriels ou non numériques.
 
-Dans ce module, nous avons appris à :
+## Correction 7
 
-- importer un jeu de données ;
-- inspecter sa structure ;
-- identifier les variables taxonomiques et les traits ;
-- détecter les doublons ;
-- résumer les valeurs manquantes ;
-- distinguer variables numériques et catégorielles ;
-- convertir les catégories en facteurs ;
-- visualiser les distributions ;
-- détecter des outliers ;
-- explorer des relations entre variables ;
-- préparer les données pour les modules suivants.
+Les facteurs indiquent à R qu’une variable représente des catégories, ce qui est nécessaire pour les résumés, les graphiques et plusieurs modèles.
 
-Le point le plus important à retenir est :
+## Correction 8
 
-> Le choix d’un modèle statistique commence toujours par la compréhension de la variable réponse, des prédicteurs, des valeurs manquantes et de la structure des données.
+Le log réduit l’influence des grandes valeurs et peut rendre une distribution plus symétrique.
 
-Le prochain module portera sur la gestion des valeurs manquantes.
+## Correction 9
+
+Un outlier peut être une observation biologique réelle. Il faut l’inspecter avant de le supprimer.
+
+## Correction 10
+
+La PCA résume plusieurs variables numériques en quelques composantes et aide à visualiser la structure des données.
